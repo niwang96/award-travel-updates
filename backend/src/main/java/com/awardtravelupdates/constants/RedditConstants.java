@@ -22,7 +22,11 @@ public final class RedditConstants {
     public static final String FIELD_TITLE = "title";
     public static final String FIELD_SELFTEXT = "selftext";
     public static final String FIELD_BODY = "body";
+    public static final String FIELD_UPS = "ups";
+    public static final String FIELD_CREATED_UTC = "created_utc";
 
-    public static final String NEW_POSTS_URI = "/r/{subreddit}/new.json?limit=25";
-    public static final String COMMENTS_URI = "/r/{subreddit}/comments/{id}.json?limit=50&depth=1";
+    public static final int DEFAULT_LIMIT = 25;
+
+    public static final String NEW_POSTS_URI = "/r/{subreddit}/new.json?limit={limit}";
+    public static final String COMMENTS_URI = "/r/{subreddit}/comments/{id}.json?limit={limit}&depth=1";
 }

@@ -1,6 +1,7 @@
 package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.constants.RedditConstants;
+import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
@@ -20,15 +23,22 @@ public class RedditService {
         this.redditClient = redditClient;
     }
 
-    public Mono<List<RedditPost>> fetchAllPosts() {
+    public Mono<List<RedditPost>> fetchAllPosts(Integer limit, Integer hours) {
+        int fetchLimit = limit != null ? limit : RedditConstants.DEFAULT_LIMIT;
+        Instant cutoff = hours != null ? Instant.now().minus(hours, ChronoUnit.HOURS) : null;
+
         return Flux.fromIterable(RedditConstants.SUBREDDITS)
-                .flatMap(subreddit -> fetchPosts(subreddit, RedditConstants.SUBREDDITS_WITH_COMMENTS.contains(subreddit)))
+                .flatMap(subreddit -> fetchPosts(
+                        subreddit,
+                        RedditConstants.SUBREDDITS_WITH_COMMENTS.contains(subreddit),
+                        fetchLimit,
+                        cutoff))
                 .collectList();
     }
 
-    private Flux<RedditPost> fetchPosts(String subreddit, boolean withComments) {
+    private Flux<RedditPost> fetchPosts(String subreddit, boolean withComments, int limit, Instant cutoff) {
         return redditClient.get()
-                .uri(RedditConstants.NEW_POSTS_URI, subreddit)
+                .uri(RedditConstants.NEW_POSTS_URI, subreddit, limit)
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .flatMapMany(body -> {
@@ -39,19 +49,25 @@ public class RedditService {
                                 String id = postData.path(RedditConstants.FIELD_ID).asText();
                                 String title = postData.path(RedditConstants.FIELD_TITLE).asText();
                                 String selftext = postData.path(RedditConstants.FIELD_SELFTEXT).asText();
+                                int upvotes = postData.path(RedditConstants.FIELD_UPS).asInt();
+                                long createdUtc = postData.path(RedditConstants.FIELD_CREATED_UTC).asLong();
+
+                                if (cutoff != null && Instant.ofEpochSecond(createdUtc).isBefore(cutoff)) {
+                                    return Mono.empty();
+                                }
 
                                 if (withComments) {
-                                    return fetchComments(subreddit, id)
-                                            .map(comments -> new RedditPost(subreddit, title, selftext, comments));
+                                    return fetchComments(subreddit, id, limit, cutoff)
+                                            .map(comments -> new RedditPost(subreddit, title, selftext, upvotes, createdUtc, comments));
                                 }
-                                return Mono.just(new RedditPost(subreddit, title, selftext, List.of()));
+                                return Mono.just(new RedditPost(subreddit, title, selftext, upvotes, createdUtc, List.of()));
                             });
                 });
     }
 
-    private Mono<List<String>> fetchComments(String subreddit, String postId) {
+    private Mono<List<RedditComment>> fetchComments(String subreddit, String postId, int limit, Instant cutoff) {
         return redditClient.get()
-                .uri(RedditConstants.COMMENTS_URI, subreddit, postId)
+                .uri(RedditConstants.COMMENTS_URI, subreddit, postId, limit)
                 .retrieve()
                 .bodyToFlux(JsonNode.class)
                 .skip(1) // first element is the post, second is comments
@@ -59,9 +75,12 @@ public class RedditService {
                 .map(commentsListing -> {
                     JsonNode children = commentsListing.path(RedditConstants.FIELD_DATA).path(RedditConstants.FIELD_CHILDREN);
                     return toList(children).stream()
-                            .map(child -> child.path(RedditConstants.FIELD_DATA).path(RedditConstants.FIELD_BODY))
-                            .filter(body -> !body.isMissingNode())
-                            .map(JsonNode::asText)
+                            .map(child -> child.path(RedditConstants.FIELD_DATA))
+                            .filter(data -> !data.path(RedditConstants.FIELD_BODY).isMissingNode())
+                            .filter(data -> cutoff == null || Instant.ofEpochSecond(data.path(RedditConstants.FIELD_CREATED_UTC).asLong()).isAfter(cutoff))
+                            .map(data -> new RedditComment(
+                                    data.path(RedditConstants.FIELD_BODY).asText(),
+                                    data.path(RedditConstants.FIELD_UPS).asInt()))
                             .toList();
                 })
                 .onErrorReturn(List.of());
