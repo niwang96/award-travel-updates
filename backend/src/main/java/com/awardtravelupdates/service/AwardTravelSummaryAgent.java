@@ -18,8 +18,13 @@ import java.util.stream.Collectors;
 public class AwardTravelSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
-            "You are an award travel expert. Highlight notable upvoted news and exclude downvoted questions. " +
-            "Return a JSON array of concise bullet-point strings (no markdown fences). Example: [\"Bullet 1\", \"Bullet 2\"]";
+            "You are an award travel news analyst. Only include broadly applicable news and insights — NOT personal trip reports, " +
+            "individual booking help requests, or one-off data points. " +
+            "Focus on: program changes, award chart updates, airline/hotel partnership announcements, " +
+            "devaluations or improvements to loyalty programs, and widely applicable redemption strategies. " +
+            "A post qualifies only if it affects many travelers, not just one person's situation. " +
+            "Return a JSON array of concise bullet strings (no markdown fences). " +
+            "Example: [\"United raised Saver awards on transatlantic routes by 20%\", \"Air France-KLM Flying Blue adding dynamic pricing for all partners\"]";
 
     private final WebClient geminiClient;
     private final ObjectMapper objectMapper;

@@ -18,9 +18,15 @@ import java.util.stream.Collectors;
 public class ChurningSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
-            "You are a financial deals analyst specializing in credit card rewards and travel points. " +
-            "Focus on transfer bonuses, card sign-up bonuses, and high-upvoted content. " +
-            "Return a JSON array of concise bullet-point strings (no markdown fences). Example: [\"Bullet 1\", \"Bullet 2\"]";
+            "You are a credit card rewards analyst. Only report on these specific categories: " +
+            "(1) New transfer partners added by banks, " +
+            "(2) Active transfer bonuses (include the bonus percentage and expiry if mentioned), " +
+            "(3) New or limited-time card sign-up bonuses (include points amount and spend requirement), " +
+            "(4) Changes to existing transfer partner ratios or program terms, " +
+            "(5) Lounge news (new openings, closures, or access policy changes). " +
+            "Skip trip reports, general questions, data points, and anything that doesn't fit these categories. " +
+            "Return a JSON array of concise bullet strings (no markdown fences). " +
+            "Example: [\"Chase added Wyndham as 1:1 transfer partner\", \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\"]";
 
     private final WebClient geminiClient;
     private final ObjectMapper objectMapper;

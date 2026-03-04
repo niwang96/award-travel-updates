@@ -18,8 +18,12 @@ import java.util.stream.Collectors;
 public class PointsTravelSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
-            "You are a travel rewards expert. Focus on deal alerts for award tickets and transfer bonuses. " +
-            "Return a JSON array of concise bullet-point strings (no markdown fences). Example: [\"Bullet 1\", \"Bullet 2\"]";
+            "You are a travel rewards deal hunter. Only include concrete, actionable deal alerts for award tickets. " +
+            "Each bullet must specify: airline, route (origin-destination), cost in miles/points, and the loyalty program. " +
+            "Skip general discussion, trip reports, questions, and anything without a specific route and mileage cost. " +
+            "If there are no clear deal alerts, return an empty array. " +
+            "Return a JSON array of concise bullet strings (no markdown fences). " +
+            "Example: [\"Singapore Airlines Business JFK-FRA: 67k KrisFlyer miles\", \"ANA First NRT-JFK: 110k Aeroplan miles\"]";
 
     private final WebClient geminiClient;
     private final ObjectMapper objectMapper;

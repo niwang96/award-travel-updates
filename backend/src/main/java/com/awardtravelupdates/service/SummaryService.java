@@ -87,9 +87,7 @@ public class SummaryService {
 
                     return agentFn.apply(currentPosts)
                             .flatMap(bullets -> Mono.fromCallable(() -> {
-                                SubredditSummary summary = new SubredditSummary(
-                                        subreddit, bullets, Instant.now(), currentCount);
-                                summaryRepository.save(summary);
+                                summaryRepository.save(new SubredditSummary(subreddit, bullets, Instant.now(), currentCount));
                                 return new SummaryResult(bullets, false);
                             }).subscribeOn(Schedulers.boundedElastic()))
                             .onErrorResume(error -> staleFallback(optionalSummary));
@@ -100,7 +98,7 @@ public class SummaryService {
         if (cached.isPresent()) {
             return Mono.just(new SummaryResult(cached.get().getBullets(), true));
         }
-        return Mono.just(new SummaryResult(List.of("Summary unavailable — API limit reached. Please try again later."), true));
+        return Mono.just(new SummaryResult(List.of("Summary unavailable — please try again later."), true));
     }
 
     private boolean isStale(SubredditSummary cached, int currentPostCount) {
