@@ -26,6 +26,7 @@ public final class RedditConstants {
     public static final String FIELD_CREATED_UTC = "created_utc";
 
     public static final int DEFAULT_LIMIT = 25;
+    public static final int TOP_COMMENTS_LIMIT = 10;
 
     public static final String NEW_POSTS_URI = "/r/{subreddit}/new.json?limit={limit}";
     public static final String COMMENTS_URI = "/r/{subreddit}/comments/{id}.json?limit={limit}&depth=1";

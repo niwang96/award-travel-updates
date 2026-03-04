@@ -24,21 +24,21 @@ public class RedditService {
     }
 
     public Mono<List<RedditPost>> fetchAllPosts(Integer limit, Integer hours) {
-        int fetchLimit = limit != null ? limit : RedditConstants.DEFAULT_LIMIT;
-        Instant cutoff = hours != null ? Instant.now().minus(hours, ChronoUnit.HOURS) : null;
+        int postLimit = limit != null ? limit : RedditConstants.DEFAULT_LIMIT;
+        Instant createdAfter = hours != null ? Instant.now().minus(hours, ChronoUnit.HOURS) : null;
 
         return Flux.fromIterable(RedditConstants.SUBREDDITS)
                 .flatMap(subreddit -> fetchPosts(
                         subreddit,
                         RedditConstants.SUBREDDITS_WITH_COMMENTS.contains(subreddit),
-                        fetchLimit,
-                        cutoff))
+                        postLimit,
+                        createdAfter))
                 .collectList();
     }
 
-    private Flux<RedditPost> fetchPosts(String subreddit, boolean withComments, int limit, Instant cutoff) {
+    private Flux<RedditPost> fetchPosts(String subreddit, boolean withComments, int postLimit, Instant createdAfter) {
         return redditClient.get()
-                .uri(RedditConstants.NEW_POSTS_URI, subreddit, limit)
+                .uri(RedditConstants.NEW_POSTS_URI, subreddit, postLimit)
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .flatMapMany(body -> {
@@ -52,12 +52,12 @@ public class RedditService {
                                 int upvotes = postData.path(RedditConstants.FIELD_UPS).asInt();
                                 long createdUtc = postData.path(RedditConstants.FIELD_CREATED_UTC).asLong();
 
-                                if (cutoff != null && Instant.ofEpochSecond(createdUtc).isBefore(cutoff)) {
+                                if (createdAfter != null && Instant.ofEpochSecond(createdUtc).isBefore(createdAfter)) {
                                     return Mono.empty();
                                 }
 
                                 if (withComments) {
-                                    return fetchComments(subreddit, id, limit, cutoff)
+                                    return fetchComments(subreddit, id, createdAfter)
                                             .map(comments -> new RedditPost(subreddit, title, selftext, upvotes, createdUtc, comments));
                                 }
                                 return Mono.just(new RedditPost(subreddit, title, selftext, upvotes, createdUtc, List.of()));
@@ -65,9 +65,9 @@ public class RedditService {
                 });
     }
 
-    private Mono<List<RedditComment>> fetchComments(String subreddit, String postId, int limit, Instant cutoff) {
+    private Mono<List<RedditComment>> fetchComments(String subreddit, String postId, Instant createdAfter) {
         return redditClient.get()
-                .uri(RedditConstants.COMMENTS_URI, subreddit, postId, limit)
+                .uri(RedditConstants.COMMENTS_URI, subreddit, postId, RedditConstants.TOP_COMMENTS_LIMIT)
                 .retrieve()
                 .bodyToFlux(JsonNode.class)
                 .skip(1) // first element is the post, second is comments
@@ -77,10 +77,12 @@ public class RedditService {
                     return toList(children).stream()
                             .map(child -> child.path(RedditConstants.FIELD_DATA))
                             .filter(data -> !data.path(RedditConstants.FIELD_BODY).isMissingNode())
-                            .filter(data -> cutoff == null || Instant.ofEpochSecond(data.path(RedditConstants.FIELD_CREATED_UTC).asLong()).isAfter(cutoff))
+                            .filter(data -> createdAfter == null || Instant.ofEpochSecond(data.path(RedditConstants.FIELD_CREATED_UTC).asLong()).isAfter(createdAfter))
                             .map(data -> new RedditComment(
                                     data.path(RedditConstants.FIELD_BODY).asText(),
                                     data.path(RedditConstants.FIELD_UPS).asInt()))
+                            .sorted((a, b) -> Integer.compare(b.upvotes(), a.upvotes()))
+                            .limit(RedditConstants.TOP_COMMENTS_LIMIT)
                             .toList();
                 })
                 .onErrorReturn(List.of());
