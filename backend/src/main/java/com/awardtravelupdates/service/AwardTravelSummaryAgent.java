@@ -3,6 +3,7 @@ package com.awardtravelupdates.service;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AwardTravelSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
@@ -28,11 +30,6 @@ public class AwardTravelSummaryAgent {
 
     private final WebClient geminiClient;
     private final ObjectMapper objectMapper;
-
-    public AwardTravelSummaryAgent(WebClient geminiClient, ObjectMapper objectMapper) {
-        this.geminiClient = geminiClient;
-        this.objectMapper = objectMapper;
-    }
 
     public Mono<List<String>> summarize(List<RedditPost> posts) {
         List<RedditPost> filtered = posts.stream()

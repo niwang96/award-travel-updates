@@ -5,6 +5,7 @@ import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.repository.SummaryRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class SummaryService {
 
     private static final int STALE_HOURS = 3;
@@ -27,18 +29,6 @@ public class SummaryService {
     private final AwardTravelSummaryAgent awardTravelAgent;
     private final ChurningSummaryAgent churningAgent;
     private final PointsTravelSummaryAgent pointsTravelAgent;
-
-    public SummaryService(RedditService redditService,
-                          SummaryRepository summaryRepository,
-                          AwardTravelSummaryAgent awardTravelAgent,
-                          ChurningSummaryAgent churningAgent,
-                          PointsTravelSummaryAgent pointsTravelAgent) {
-        this.redditService = redditService;
-        this.summaryRepository = summaryRepository;
-        this.awardTravelAgent = awardTravelAgent;
-        this.churningAgent = churningAgent;
-        this.pointsTravelAgent = pointsTravelAgent;
-    }
 
     public Mono<Map<String, SummaryResult>> getSummaries() {
         return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)

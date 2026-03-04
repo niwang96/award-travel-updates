@@ -4,6 +4,7 @@ import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -15,13 +16,10 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 public class RedditService {
 
     private final WebClient redditClient;
-
-    public RedditService(WebClient redditClient) {
-        this.redditClient = redditClient;
-    }
 
     public Mono<List<RedditPost>> fetchAllPosts(Integer limit, Integer hours) {
         int postLimit = limit != null ? limit : RedditConstants.DEFAULT_LIMIT;
