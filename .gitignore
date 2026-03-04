@@ -1,0 +1,27 @@
+# ── Java / Gradle ────────────────────────────────────────────
+.gradle/
+build/
+*.class
+*.jar
+*.war
+*.ear
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ── Node / React ─────────────────────────────────────────────
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+
+# ── IDEs ─────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
