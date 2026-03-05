@@ -38,7 +38,7 @@ public final class RedditConstants {
     public static final int TOP_COMMENTS_LIMIT = 10;
 
     public static final Set<String> SUBREDDITS_USING_TOP_POSTS = Set.of(SUBREDDIT_AWARD_TRAVEL);
-    public static final int TOP_POSTS_DAYS = 28;
+    public static final Map<String, Integer> MIN_UPVOTES = Map.of(SUBREDDIT_AWARD_TRAVEL, 1);
 
     public static final String NEW_POSTS_URI = "/r/{subreddit}/new.json?limit={limit}";
     public static final String TOP_POSTS_URI = "/r/{subreddit}/top.json?t=month&limit={limit}";

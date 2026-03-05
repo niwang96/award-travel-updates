@@ -9,8 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -26,10 +24,7 @@ public class RedditService {
     public List<RedditPost> fetchPostsForSubreddit(String subreddit) {
         boolean withComments = RedditConstants.SUBREDDITS_WITH_COMMENTS.contains(subreddit);
         boolean useTopPosts = RedditConstants.SUBREDDITS_USING_TOP_POSTS.contains(subreddit);
-
-        Instant createdAfter = useTopPosts
-                ? Instant.now().minus(RedditConstants.TOP_POSTS_DAYS, ChronoUnit.DAYS)
-                : null;
+        int minUpvotes = RedditConstants.MIN_UPVOTES.getOrDefault(subreddit, 0);
         String uri = useTopPosts ? RedditConstants.TOP_POSTS_URI : RedditConstants.NEW_POSTS_URI;
 
         try {
@@ -40,8 +35,9 @@ public class RedditService {
 
             JsonNode children = body.path(RedditConstants.FIELD_DATA).path(RedditConstants.FIELD_CHILDREN);
             return toList(children).stream()
-                    .map(child -> toPost(child, subreddit, withComments, createdAfter))
+                    .map(child -> toPost(child, subreddit, withComments))
                     .filter(Objects::nonNull)
+                    .filter(p -> p.upvotes() >= minUpvotes)
                     .toList();
         } catch (Exception e) {
             log.error("Failed to fetch posts for r/{}: {}", subreddit, e.getMessage());
@@ -49,7 +45,7 @@ public class RedditService {
         }
     }
 
-    private RedditPost toPost(JsonNode child, String subreddit, boolean withComments, Instant createdAfter) {
+    private RedditPost toPost(JsonNode child, String subreddit, boolean withComments) {
         JsonNode postData = child.path(RedditConstants.FIELD_DATA);
         String id = postData.path(RedditConstants.FIELD_ID).asText();
         String title = postData.path(RedditConstants.FIELD_TITLE).asText();
@@ -58,26 +54,18 @@ public class RedditService {
         long createdUtc = postData.path(RedditConstants.FIELD_CREATED_UTC).asLong();
         String permalink = RedditConstants.REDDIT_BASE_URL + postData.path(RedditConstants.FIELD_PERMALINK).asText();
 
-        if (isBefore(createdUtc, createdAfter)) {
-            return null;
-        }
-
         String titleFilter = RedditConstants.COMMENT_TITLE_FILTERS.get(subreddit);
         boolean shouldFetchComments = withComments &&
                 (titleFilter == null || title.toLowerCase().contains(titleFilter));
 
         List<RedditComment> comments = shouldFetchComments
-                ? fetchComments(subreddit, id, createdAfter)
+                ? fetchComments(subreddit, id)
                 : List.of();
 
         return new RedditPost(subreddit, title, selftext, upvotes, createdUtc, comments, permalink);
     }
 
-    private boolean isBefore(long createdUtc, Instant cutoff) {
-        return cutoff != null && Instant.ofEpochSecond(createdUtc).isBefore(cutoff);
-    }
-
-    private List<RedditComment> fetchComments(String subreddit, String postId, Instant createdAfter) {
+    private List<RedditComment> fetchComments(String subreddit, String postId) {
         try {
             // Response is a JSON array: [post listing, comments listing]
             JsonNode response = redditClient.get()
@@ -92,7 +80,6 @@ public class RedditService {
             return toList(children).stream()
                     .map(child -> child.path(RedditConstants.FIELD_DATA))
                     .filter(data -> !data.path(RedditConstants.FIELD_BODY).isMissingNode())
-                    .filter(data -> !isBefore(data.path(RedditConstants.FIELD_CREATED_UTC).asLong(), createdAfter))
                     .map(data -> new RedditComment(
                             data.path(RedditConstants.FIELD_BODY).asText(),
                             data.path(RedditConstants.FIELD_UPS).asInt(),

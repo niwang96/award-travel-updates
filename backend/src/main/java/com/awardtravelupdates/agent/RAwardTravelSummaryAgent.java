@@ -30,6 +30,10 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
         super(groqClient, objectMapper);
     }
 
+    private static String truncate(String text, int maxChars) {
+        return text.length() <= maxChars ? text : text.substring(0, maxChars) + "…";
+    }
+
     @Override
     public String getSubreddit() {
         return RedditConstants.SUBREDDIT_AWARD_TRAVEL;
@@ -37,19 +41,15 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
 
     @Override
     public List<SummaryUpdate> summarize(List<RedditPost> posts) {
-        List<RedditPost> filtered = posts.stream()
-                .filter(p -> p.upvotes() > 0)
-                .toList();
-
-        if (filtered.isEmpty()) {
+        if (posts.isEmpty()) {
             return fallbackOutput("No major award chart updates or program changes right now — check back soon.");
         }
 
-        String numberedPosts = IntStream.range(0, filtered.size())
+        String numberedPosts = IntStream.range(0, posts.size())
                 .mapToObj(i -> {
-                    RedditPost post = filtered.get(i);
-                    String text = "[" + post.upvotes() + " upvotes] " + post.title() +
-                            (post.selftext().isBlank() ? "" : "\n" + post.selftext());
+                    RedditPost post = posts.get(i);
+                    String selftext = post.selftext().isBlank() ? "" : "\n" + truncate(post.selftext(), 500);
+                    String text = "[" + post.upvotes() + " upvotes] " + post.title() + selftext;
                     return "[" + (i + 1) + "] " + text;
                 })
                 .collect(Collectors.joining("\n\n"));
@@ -57,7 +57,7 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key news and updates from these awardtravel posts:\n\n" + numberedPosts);
 
-        List<SummaryUpdate> updates = parseUpdates(json, filtered,
+        List<SummaryUpdate> updates = parseUpdates(json, posts,
                 (text, post) -> new SummaryUpdate(text, post.permalink(), post.createdUtc()));
         return updates.isEmpty()
                 ? fallbackOutput("No major award chart updates or program changes right now — check back soon.")
