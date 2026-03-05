@@ -22,16 +22,9 @@ public class RedditService {
 
     private final WebClient redditClient;
 
-    public Mono<List<RedditPost>> fetchAllPosts(Integer limit, Integer hours) {
-        int postLimit = limit != null ? limit : RedditConstants.DEFAULT_LIMIT;
-        Instant createdAfter = hours != null ? Instant.now().minus(hours, ChronoUnit.HOURS) : null;
-
-        return Flux.fromIterable(RedditConstants.SUBREDDITS)
-                .flatMap(subreddit -> fetchPosts(
-                        subreddit,
-                        RedditConstants.SUBREDDITS_WITH_COMMENTS.contains(subreddit),
-                        postLimit,
-                        createdAfter))
+    public Mono<List<RedditPost>> fetchPostsForSubreddit(String subreddit) {
+        boolean withComments = RedditConstants.SUBREDDITS_WITH_COMMENTS.contains(subreddit);
+        return fetchPosts(subreddit, withComments, RedditConstants.DEFAULT_LIMIT, null)
                 .collectList();
     }
 

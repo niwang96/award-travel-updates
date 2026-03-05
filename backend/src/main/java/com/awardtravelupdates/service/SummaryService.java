@@ -1,7 +1,6 @@
 package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.agent.AbstractSummaryAgent;
-import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
@@ -40,26 +39,21 @@ public class SummaryService {
     }
 
     public Mono<Map<String, SummaryResult>> getSummaries() {
-        return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)
-                .flatMap(allPosts -> {
-                    Map<String, List<RedditPost>> bySubreddit = allPosts.stream()
-                            .collect(Collectors.groupingBy(RedditPost::subreddit));
+        List<Mono<Map.Entry<String, SummaryResult>>> monos = agentsBySubreddit.keySet().stream()
+                .map(subreddit -> redditService.fetchPostsForSubreddit(subreddit)
+                        .flatMap(posts -> getSummary(subreddit, posts))
+                        .map(result -> Map.entry(subreddit, result)))
+                .toList();
 
-                    List<Mono<Map.Entry<String, SummaryResult>>> monos = agentsBySubreddit.keySet().stream()
-                            .map(subreddit -> getSummary(subreddit, bySubreddit.getOrDefault(subreddit, List.of()))
-                                    .map(result -> Map.entry(subreddit, result)))
-                            .toList();
-
-                    return Mono.zip(monos, results -> {
-                        Map<String, SummaryResult> map = new HashMap<>();
-                        for (Object r : results) {
-                            @SuppressWarnings("unchecked")
-                            Map.Entry<String, SummaryResult> entry = (Map.Entry<String, SummaryResult>) r;
-                            map.put(entry.getKey(), entry.getValue());
-                        }
-                        return map;
-                    });
-                });
+        return Mono.zip(monos, results -> {
+            Map<String, SummaryResult> map = new HashMap<>();
+            for (Object r : results) {
+                @SuppressWarnings("unchecked")
+                Map.Entry<String, SummaryResult> entry = (Map.Entry<String, SummaryResult>) r;
+                map.put(entry.getKey(), entry.getValue());
+            }
+            return map;
+        });
     }
 
     public Mono<SummaryResult> getSummary(String subreddit) {
@@ -67,13 +61,8 @@ public class SummaryService {
         if (agent == null) {
             return Mono.just(new SummaryResult(List.of(new SummaryUpdate("Unknown subreddit: " + subreddit, null, null)), true));
         }
-        return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)
-                .flatMap(allPosts -> {
-                    List<RedditPost> posts = allPosts.stream()
-                            .filter(p -> p.subreddit().equals(subreddit))
-                            .toList();
-                    return getSummary(subreddit, posts);
-                });
+        return redditService.fetchPostsForSubreddit(subreddit)
+                .flatMap(posts -> getSummary(subreddit, posts));
     }
 
     private Mono<SummaryResult> getSummary(

@@ -29,12 +29,12 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
             "You are a credit card rewards analyst. Only report on these specific categories: " +
             "(1) New transfer partners added by banks, " +
             "(2) Active transfer bonuses (include the bonus percentage and expiry if mentioned), " +
-            "(3) New or limited-time card sign-up bonuses (include points amount and spend requirement), " +
+            "(3) New or limited-time card sign-up bonuses (include the full card name, points amount, and spend requirement), " +
             "(4) Changes to existing transfer partner ratios or program terms, " +
             "(5) Lounge news (new openings, closures, or access policy changes). " +
             "Skip trip reports, general questions, data points, and anything that doesn't fit these categories. " +
             "Return a JSON array of objects with \"text\" (the bullet) and \"commentIndex\" (1-based index of the comment it came from, or 0 if from the post title). " +
-            "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"commentIndex\": 3}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"commentIndex\": 7}]";
+            "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"commentIndex\": 3}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"commentIndex\": 7}, {\"text\": \"Citi AA Platinum Select: 80k AA miles for $1k spend (inflight offer)\", \"commentIndex\": 12}]";
 
     public ChurningSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
