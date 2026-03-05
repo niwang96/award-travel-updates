@@ -14,13 +14,15 @@ import java.util.stream.Collectors;
 public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
-            "You are an award travel news analyst. Only include broadly applicable news and insights — NOT personal trip reports, " +
-            "individual booking help requests, or one-off data points. " +
-            "Focus on: program changes, award chart updates, airline/hotel partnership announcements, " +
-            "devaluations or improvements to loyalty programs, and widely applicable redemption strategies. " +
-            "A post qualifies only if it affects many travelers, not just one person's situation. " +
+            "You are an award travel news analyst. Only extract posts that announce one of these three things: " +
+            "(1) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
+            "(2) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
+            "(3) New award flight availability — an airline opening up new award inventory on a route or cabin class that was not previously available. " +
+            "Disqualify any post that is: a personal trip report, a booking data point or individual redemption example, " +
+            "a question or help request, speculation, or a discussion without an official announcement. " +
+            "If no posts meet these criteria, return an empty array. " +
             "Return a JSON array of concise bullet strings (no markdown fences). " +
-            "Example: [\"United raised Saver awards on transatlantic routes by 20%\", \"Air France-KLM Flying Blue adding dynamic pricing for all partners\"]";
+            "Example: [\"United raised Saver awards on transatlantic routes by 20%\", \"Air France-KLM Flying Blue switching to dynamic pricing for all partners\", \"ANA opening First Class award availability on NRT-JFK to partner programs\"]";
 
     public AwardTravelSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
@@ -47,6 +49,9 @@ public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
                 .collect(Collectors.joining("\n\n---\n\n"));
 
         return callApi(SYSTEM_PROMPT,
-                "Summarize the key news and updates from these upvoted awardtravel posts:\n\n" + postsText);
+                "Summarize the key news and updates from these upvoted awardtravel posts:\n\n" + postsText)
+                .map(bullets -> bullets.isEmpty()
+                        ? List.of("No major award chart updates or program changes right now — check back soon.")
+                        : bullets);
     }
 }
