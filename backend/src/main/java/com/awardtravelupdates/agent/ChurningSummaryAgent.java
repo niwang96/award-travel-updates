@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-public class ChurningSummaryAgent extends AbstractSummaryAgent {
+public class ChurningSummaryAgent extends AbstractLlmAgent implements AbstractSummaryAgent {
 
     private static final int POSTS_DAYS_LIMIT = 3;
 
@@ -57,8 +57,7 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
                 .toList();
 
         if (filtered.isEmpty()) {
-            return Mono.just(new AgentOutput(List.of(
-                    new SummaryUpdate("No news and updates posts found.", null, null))));
+            return Mono.just(fallbackOutput("No news and updates posts found."));
         }
 
         return Flux.fromIterable(filtered)

@@ -1,5 +1,7 @@
 package com.awardtravelupdates.agent;
 
+import com.awardtravelupdates.model.AgentOutput;
+import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,10 @@ public abstract class AbstractLlmAgent {
 
     private final WebClient groqClient;
     private final ObjectMapper objectMapper;
+
+    protected static AgentOutput fallbackOutput(String message) {
+        return new AgentOutput(List.of(new SummaryUpdate(message, null, null)));
+    }
 
     protected Mono<List<String>> callApi(String systemPrompt, String userMessage) {
         Map<String, Object> body = Map.of(

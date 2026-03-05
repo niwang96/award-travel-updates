@@ -40,8 +40,7 @@ public abstract class AbstractBlogSummaryAgent extends AbstractLlmAgent {
 
     public Mono<AgentOutput> summarize(List<BlogPost> posts) {
         if (posts.isEmpty()) {
-            return Mono.just(new AgentOutput(List.of(
-                    new SummaryUpdate("No recent updates from " + getDisplayName() + " — check back soon.", null, null))));
+            return Mono.just(fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon."));
         }
 
         String numberedPosts = IntStream.range(0, posts.size())
@@ -53,8 +52,7 @@ public abstract class AbstractBlogSummaryAgent extends AbstractLlmAgent {
                 .map(json -> parseUpdates(json, posts))
                 .map(updates -> {
                     if (updates.isEmpty()) {
-                        return new AgentOutput(List.of(
-                                new SummaryUpdate("No recent updates from " + getDisplayName() + " — check back soon.", null, null)));
+                        return fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.");
                     }
                     return new AgentOutput(updates);
                 });

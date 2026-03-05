@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
+public class AwardTravelSummaryAgent extends AbstractLlmAgent implements AbstractSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
             "You are an award travel news analyst. Only extract posts that announce one of these three things: " +
@@ -43,8 +43,7 @@ public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
                 .toList();
 
         if (filtered.isEmpty()) {
-            return Mono.just(new AgentOutput(List.of(
-                    new SummaryUpdate("No major award chart updates or program changes right now — check back soon.", null, null))));
+            return Mono.just(fallbackOutput("No major award chart updates or program changes right now — check back soon."));
         }
 
         return Flux.fromIterable(filtered)
@@ -63,8 +62,7 @@ public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
                             .flatMap(List::stream)
                             .collect(Collectors.toList());
                     if (updates.isEmpty()) {
-                        return new AgentOutput(List.of(
-                                new SummaryUpdate("No major award chart updates or program changes right now — check back soon.", null, null)));
+                        return fallbackOutput("No major award chart updates or program changes right now — check back soon.");
                     }
                     return new AgentOutput(updates);
                 });
