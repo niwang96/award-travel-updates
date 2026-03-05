@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class AwardTravelSummaryAgent extends AbstractLlmAgent implements AbstractSummaryAgent {
+public class RAwardTravelSummaryAgent extends RedditSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
             "You are an award travel news analyst. Only extract posts that announce one of these three things: " +
@@ -27,7 +27,7 @@ public class AwardTravelSummaryAgent extends AbstractLlmAgent implements Abstrac
             "Return a JSON array of concise bullet strings (no markdown fences). " +
             "Example: [\"United raised Saver awards on transatlantic routes by 20%\", \"ANA opening First Class award availability on NRT-JFK to partner programs\"]";
 
-    public AwardTravelSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
+    public RAwardTravelSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
     }
 

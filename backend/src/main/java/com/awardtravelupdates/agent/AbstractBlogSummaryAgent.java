@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public abstract class AbstractBlogSummaryAgent extends AbstractLlmAgent {
+public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
 
     private static final String SYSTEM_PROMPT =
             "You are a credit card rewards analyst. Only report on these specific categories: " +

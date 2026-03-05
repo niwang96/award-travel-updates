@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
-public class DoctorOfCreditBlogSummaryAgent extends AbstractBlogSummaryAgent {
+public class DoCBlogSummaryAgent extends AbstractBlogSummaryAgent {
 
-    public DoctorOfCreditBlogSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
+    public DoCBlogSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
     }
 

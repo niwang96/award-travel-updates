@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-public class ChurningSummaryAgent extends AbstractLlmAgent implements AbstractSummaryAgent {
+public class RChurningSummaryAgent extends RedditSummaryAgent {
 
     private static final int POSTS_DAYS_LIMIT = 3;
 
@@ -39,7 +39,7 @@ public class ChurningSummaryAgent extends AbstractLlmAgent implements AbstractSu
             "Return a JSON array of objects with \"text\" (the bullet) and \"commentIndex\" (1-based index of the comment it came from, or 0 if from the post title). " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"commentIndex\": 3}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"commentIndex\": 7}, {\"text\": \"Citi AA Platinum Select: 80k AA miles for $1k spend (inflight offer)\", \"commentIndex\": 12}]";
 
-    public ChurningSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
+    public RChurningSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
     }
 
