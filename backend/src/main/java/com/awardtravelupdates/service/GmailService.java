@@ -4,8 +4,8 @@ import com.awardtravelupdates.config.GoogleProperties;
 import com.awardtravelupdates.model.EmailDeal;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -25,10 +25,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class GmailService {
-
-    private static final Logger log = LoggerFactory.getLogger(GmailService.class);
 
     private static final String GMAIL_QUERY = "from:hello@roame.travel label:Flight Deals";
     private static final int MAX_EMAILS = 10;
@@ -63,12 +63,6 @@ public class GmailService {
 
     private volatile String cachedAccessToken;
     private volatile Instant tokenExpiry = Instant.MIN;
-
-    public GmailService(RestClient googleAuthClient, RestClient gmailApiClient, GoogleProperties googleProperties) {
-        this.googleAuthClient = googleAuthClient;
-        this.gmailApiClient = gmailApiClient;
-        this.googleProperties = googleProperties;
-    }
 
     public List<SummaryUpdate> fetchRecentDeals() {
         try {

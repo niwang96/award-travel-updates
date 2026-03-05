@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.client.RestClient;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -52,22 +51,10 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key news and updates from these blog posts:\n\n" + numberedPosts);
 
-        List<SummaryUpdate> updates = parseUpdates(json, posts);
+        List<SummaryUpdate> updates = parseUpdates(json, posts,
+                (text, post) -> new SummaryUpdate(text, post.url(), post.publishedUtc()));
         return updates.isEmpty()
                 ? fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.")
                 : new AgentOutput(updates);
-    }
-
-    private List<SummaryUpdate> parseUpdates(JsonNode json, List<BlogPost> posts) {
-        List<SummaryUpdate> updates = new ArrayList<>();
-        for (JsonNode item : json) {
-            String text = item.path("text").asText();
-            int postIndex = item.path("postIndex").asInt(0);
-            if (postIndex >= 1 && postIndex <= posts.size()) {
-                BlogPost post = posts.get(postIndex - 1);
-                updates.add(new SummaryUpdate(text, post.url(), post.publishedUtc()));
-            }
-        }
-        return updates;
     }
 }

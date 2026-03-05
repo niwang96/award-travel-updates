@@ -7,7 +7,7 @@ import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.model.SummaryUpdate;
-import com.awardtravelupdates.repository.SummaryRepository;
+import com.awardtravelupdates.repository.SubredditSummaryRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -22,14 +22,14 @@ import java.util.stream.Collectors;
 public class SubredditSummaryService extends AbstractCachingSummaryService<RedditPost, SubredditSummary> {
 
     private final RedditService redditService;
-    private final SummaryRepository summaryRepository;
+    private final SubredditSummaryRepository subredditSummaryRepository;
     private final Map<String, AbstractRedditSummaryAgent> agentsBySubreddit;
 
     public SubredditSummaryService(RedditService redditService,
-                                   SummaryRepository summaryRepository,
+                                   SubredditSummaryRepository subredditSummaryRepository,
                                    List<AbstractRedditSummaryAgent> agents) {
         this.redditService = redditService;
-        this.summaryRepository = summaryRepository;
+        this.subredditSummaryRepository = subredditSummaryRepository;
         this.agentsBySubreddit = agents.stream()
                 .collect(Collectors.toMap(AbstractRedditSummaryAgent::getSubreddit, a -> a));
     }
@@ -56,12 +56,12 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
 
     @Override
     protected Optional<SubredditSummary> findCached(String id) {
-        return summaryRepository.findById(id);
+        return subredditSummaryRepository.findById(id);
     }
 
     @Override
     protected void saveToCache(String id, List<SummaryUpdate> updates, int count) {
-        summaryRepository.save(new SubredditSummary(id, updates, Instant.now(), count));
+        subredditSummaryRepository.save(new SubredditSummary(id, updates, Instant.now(), count));
     }
 
     @Override

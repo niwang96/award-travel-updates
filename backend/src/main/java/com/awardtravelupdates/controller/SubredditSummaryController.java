@@ -17,12 +17,12 @@ public class SubredditSummaryController {
 
     private final SubredditSummaryService subredditSummaryService;
 
-    @GetMapping("/summaries")
+    @GetMapping("/subreddit-summaries")
     public Map<String, SummaryResult> getSummaries() {
         return subredditSummaryService.getSummaries();
     }
 
-    @GetMapping("/summaries/{subreddit}")
+    @GetMapping("/subreddit-summaries/{subreddit}")
     public SummaryResult getSummary(@PathVariable String subreddit) {
         return subredditSummaryService.getSummary(subreddit);
     }

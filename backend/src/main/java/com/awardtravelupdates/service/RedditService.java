@@ -5,8 +5,7 @@ import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -17,11 +16,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RedditService {
-
-    private static final Logger log = LoggerFactory.getLogger(RedditService.class);
 
     private final RestClient redditClient;
 

@@ -5,20 +5,20 @@ import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
+@Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractSummaryAgent {
-
-    private static final Logger log = LoggerFactory.getLogger(AbstractSummaryAgent.class);
 
     private static final String MODEL = "llama-3.3-70b-versatile";
     private static final int MAX_RETRIES = 3;
@@ -110,5 +110,17 @@ public abstract class AbstractSummaryAgent {
             if (stripped.endsWith("```")) stripped = stripped.substring(0, stripped.lastIndexOf("```")).trim();
         }
         return stripped;
+    }
+
+    protected <P> List<SummaryUpdate> parseUpdates(JsonNode json, List<P> posts, BiFunction<String, P, SummaryUpdate> toUpdate) {
+        List<SummaryUpdate> updates = new ArrayList<>();
+        for (JsonNode item : json) {
+            String text = item.path("text").asText();
+            int postIndex = item.path("postIndex").asInt(0);
+            if (postIndex >= 1 && postIndex <= posts.size()) {
+                updates.add(toUpdate.apply(text, posts.get(postIndex - 1)));
+            }
+        }
+        return updates;
     }
 }

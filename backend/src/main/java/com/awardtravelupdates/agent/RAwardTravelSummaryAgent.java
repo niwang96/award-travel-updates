@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -59,22 +58,10 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key news and updates from these awardtravel posts:\n\n" + numberedPosts);
 
-        List<SummaryUpdate> updates = parseUpdates(json, filtered);
+        List<SummaryUpdate> updates = parseUpdates(json, filtered,
+                (text, post) -> new SummaryUpdate(text, post.permalink(), post.createdUtc()));
         return updates.isEmpty()
                 ? fallbackOutput("No major award chart updates or program changes right now — check back soon.")
                 : new AgentOutput(updates);
-    }
-
-    private List<SummaryUpdate> parseUpdates(JsonNode json, List<RedditPost> posts) {
-        List<SummaryUpdate> updates = new ArrayList<>();
-        for (JsonNode item : json) {
-            String text = item.path("text").asText();
-            int postIndex = item.path("postIndex").asInt(0);
-            if (postIndex >= 1 && postIndex <= posts.size()) {
-                RedditPost post = posts.get(postIndex - 1);
-                updates.add(new SummaryUpdate(text, post.permalink(), post.createdUtc()));
-            }
-        }
-        return updates;
     }
 }

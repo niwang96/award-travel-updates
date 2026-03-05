@@ -5,8 +5,8 @@ import com.awardtravelupdates.model.BlogPost;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -15,16 +15,12 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class BlogService {
 
-    private static final Logger log = LoggerFactory.getLogger(BlogService.class);
-
     private final RestClient rssClient;
-
-    public BlogService(RestClient rssClient) {
-        this.rssClient = rssClient;
-    }
 
     public List<BlogPost> fetchPostsForBlog(String blogId) {
         String rssUrl = BlogConstants.BLOG_RSS_URLS.get(blogId);
