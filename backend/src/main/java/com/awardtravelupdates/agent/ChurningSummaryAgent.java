@@ -54,7 +54,7 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
 
         if (filtered.isEmpty()) {
             return Mono.just(new AgentOutput(List.of(
-                    new SummaryUpdate("No news and updates posts found.", null))));
+                    new SummaryUpdate("No news and updates posts found.", null, null))));
         }
 
         return Flux.fromIterable(filtered)
@@ -85,7 +85,8 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
             String text = item.path("text").asText();
             int commentIndex = item.path("commentIndex").asInt(0);
             String source = resolveSource(commentIndex, post, comments);
-            updates.add(new SummaryUpdate(text, source));
+            long timestamp = resolveTimestamp(commentIndex, post, comments);
+            updates.add(new SummaryUpdate(text, source, timestamp));
         }
         return updates;
     }
@@ -95,5 +96,12 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
             return comments.get(commentIndex - 1).permalink();
         }
         return post.permalink();
+    }
+
+    private long resolveTimestamp(int commentIndex, RedditPost post, List<RedditComment> comments) {
+        if (commentIndex > 0 && commentIndex <= comments.size()) {
+            return comments.get(commentIndex - 1).createdUtc();
+        }
+        return post.createdUtc();
     }
 }

@@ -36,14 +36,20 @@ public class RedditService {
     }
 
     private Flux<RedditPost> fetchPosts(String subreddit, boolean withComments, int postLimit, Instant createdAfter) {
+        boolean useTopPosts = RedditConstants.SUBREDDITS_USING_TOP_POSTS.contains(subreddit);
+        Instant effectiveCreatedAfter = useTopPosts
+                ? Instant.now().minus(RedditConstants.TOP_POSTS_DAYS, ChronoUnit.DAYS)
+                : createdAfter;
+        String uri = useTopPosts ? RedditConstants.TOP_POSTS_URI : RedditConstants.NEW_POSTS_URI;
+
         return redditClient.get()
-                .uri(RedditConstants.NEW_POSTS_URI, subreddit, postLimit)
+                .uri(uri, subreddit, postLimit)
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .flatMapMany(body -> {
                     JsonNode children = body.path(RedditConstants.FIELD_DATA).path(RedditConstants.FIELD_CHILDREN);
                     return Flux.fromIterable(toList(children))
-                            .flatMap(child -> toPost(child, subreddit, withComments, createdAfter));
+                            .flatMap(child -> toPost(child, subreddit, withComments, effectiveCreatedAfter));
                 });
     }
 
@@ -89,6 +95,7 @@ public class RedditService {
                             .map(data -> new RedditComment(
                                     data.path(RedditConstants.FIELD_BODY).asText(),
                                     data.path(RedditConstants.FIELD_UPS).asInt(),
+                                    data.path(RedditConstants.FIELD_CREATED_UTC).asLong(),
                                     RedditConstants.REDDIT_BASE_URL + data.path(RedditConstants.FIELD_PERMALINK).asText()))
                             .sorted(Comparator.comparingInt(RedditComment::upvotes).reversed())
                             .limit(RedditConstants.TOP_COMMENTS_LIMIT)

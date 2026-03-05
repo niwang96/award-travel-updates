@@ -65,7 +65,7 @@ public class SummaryService {
     public Mono<SummaryResult> getSummary(String subreddit) {
         AbstractSummaryAgent agent = agentsBySubreddit.get(subreddit);
         if (agent == null) {
-            return Mono.just(new SummaryResult(List.of(new SummaryUpdate("Unknown subreddit: " + subreddit, null)), true));
+            return Mono.just(new SummaryResult(List.of(new SummaryUpdate("Unknown subreddit: " + subreddit, null, null)), true));
         }
         return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)
                 .flatMap(allPosts -> {
@@ -105,7 +105,7 @@ public class SummaryService {
             return Mono.just(new SummaryResult(cached.get().getUpdates(), true));
         }
         return Mono.just(new SummaryResult(
-                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null)), true));
+                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null, null)), true));
     }
 
     private boolean isStale(SubredditSummary cached, int currentPostCount) {

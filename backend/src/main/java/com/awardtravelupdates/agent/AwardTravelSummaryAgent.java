@@ -44,7 +44,7 @@ public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
 
         if (filtered.isEmpty()) {
             return Mono.just(new AgentOutput(List.of(
-                    new SummaryUpdate("No major award chart updates or program changes right now — check back soon.", null))));
+                    new SummaryUpdate("No major award chart updates or program changes right now — check back soon.", null, null))));
         }
 
         return Flux.fromIterable(filtered)
@@ -54,7 +54,7 @@ public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
                     return callApi(SYSTEM_PROMPT,
                             "Summarize the key news and updates from this awardtravel post:\n\n" + postText)
                             .map(bullets -> bullets.stream()
-                                    .map(text -> new SummaryUpdate(text, post.permalink()))
+                                    .map(text -> new SummaryUpdate(text, post.permalink(), post.createdUtc()))
                                     .collect(Collectors.toList()));
                 })
                 .collectList()
@@ -64,7 +64,7 @@ public class AwardTravelSummaryAgent extends AbstractSummaryAgent {
                             .collect(Collectors.toList());
                     if (updates.isEmpty()) {
                         return new AgentOutput(List.of(
-                                new SummaryUpdate("No major award chart updates or program changes right now — check back soon.", null)));
+                                new SummaryUpdate("No major award chart updates or program changes right now — check back soon.", null, null)));
                     }
                     return new AgentOutput(updates);
                 });
