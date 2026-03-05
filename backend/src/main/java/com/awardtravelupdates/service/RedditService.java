@@ -58,7 +58,10 @@ public class RedditService {
         if (isBefore(createdUtc, createdAfter)) {
             return Mono.empty();
         }
-        if (withComments) {
+        String titleFilter = RedditConstants.COMMENT_TITLE_FILTERS.get(subreddit);
+        boolean shouldFetchComments = withComments &&
+                (titleFilter == null || title.toLowerCase().contains(titleFilter));
+        if (shouldFetchComments) {
             return fetchComments(subreddit, id, createdAfter)
                     .map(comments -> new RedditPost(subreddit, title, selftext, upvotes, createdUtc, comments));
         }

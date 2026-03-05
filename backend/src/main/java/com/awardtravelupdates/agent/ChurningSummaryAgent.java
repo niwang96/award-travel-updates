@@ -7,13 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class ChurningSummaryAgent extends AbstractSummaryAgent {
-
-    private static final String NEWS_FILTER_KEYWORD = "news and updates";
 
     private static final String SYSTEM_PROMPT =
             "You are a credit card rewards analyst. Only report on these specific categories: " +
@@ -35,10 +35,14 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
         return RedditConstants.SUBREDDIT_CHURNING;
     }
 
+    private static final int POSTS_DAYS_LIMIT = 3;
+
     @Override
     public Mono<List<String>> summarize(List<RedditPost> posts) {
+        Instant cutoff = Instant.now().minus(POSTS_DAYS_LIMIT, ChronoUnit.DAYS);
         List<RedditPost> filtered = posts.stream()
-                .filter(p -> p.title().toLowerCase().contains(NEWS_FILTER_KEYWORD))
+                .filter(p -> Instant.ofEpochSecond(p.createdUtc()).isAfter(cutoff))
+                .filter(p -> p.title().toLowerCase().contains(RedditConstants.CHURNING_COMMENT_TITLE_FILTER))
                 .toList();
 
         if (filtered.isEmpty()) {

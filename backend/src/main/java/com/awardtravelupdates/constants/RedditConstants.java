@@ -1,6 +1,7 @@
 package com.awardtravelupdates.constants;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public final class RedditConstants {
@@ -13,6 +14,10 @@ public final class RedditConstants {
             SUBREDDIT_AWARD_TRAVEL, SUBREDDIT_CHURNING);
 
     public static final Set<String> SUBREDDITS_WITH_COMMENTS = Set.of(SUBREDDIT_CHURNING);
+
+    public static final String CHURNING_COMMENT_TITLE_FILTER = "news and updates";
+    public static final Map<String, String> COMMENT_TITLE_FILTERS = Map.of(
+            SUBREDDIT_CHURNING, CHURNING_COMMENT_TITLE_FILTER);
 
     public static final String FIELD_DATA = "data";
     public static final String FIELD_CHILDREN = "children";
