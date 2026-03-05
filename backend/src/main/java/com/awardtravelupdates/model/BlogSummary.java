@@ -11,13 +11,13 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
-public class SubredditSummary extends AbstractCachedSummary {
+public class BlogSummary extends AbstractCachedSummary {
 
     @Id
-    private String subreddit;
+    private String blogId;
 
-    public SubredditSummary(String subreddit, List<SummaryUpdate> updates, Instant lastUpdated, int postCount) {
+    public BlogSummary(String blogId, List<SummaryUpdate> updates, Instant lastUpdated, int postCount) {
         super(updates, lastUpdated, postCount);
-        this.subreddit = subreddit;
+        this.blogId = blogId;
     }
 }

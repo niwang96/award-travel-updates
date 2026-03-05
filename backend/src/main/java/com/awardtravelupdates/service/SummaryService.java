@@ -1,6 +1,7 @@
 package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.agent.AbstractSummaryAgent;
+import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
@@ -21,9 +22,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class SummaryService {
-
-    private static final int STALE_HOURS = 3;
-    private static final int NEW_POSTS_THRESHOLD = 5;
 
     private final RedditService redditService;
     private final SummaryRepository summaryRepository;
@@ -98,8 +96,8 @@ public class SummaryService {
     }
 
     private boolean isStale(SubredditSummary cached, int currentPostCount) {
-        boolean tooOld = cached.getLastUpdated().isBefore(Instant.now().minus(STALE_HOURS, ChronoUnit.HOURS));
-        boolean tooManyNewPosts = (currentPostCount - cached.getPostCount()) >= NEW_POSTS_THRESHOLD;
+        boolean tooOld = cached.getLastUpdated().isBefore(Instant.now().minus(RedditConstants.STALE_HOURS, ChronoUnit.HOURS));
+        boolean tooManyNewPosts = (currentPostCount - cached.getPostCount()) >= RedditConstants.NEW_POSTS_THRESHOLD;
         return tooOld || tooManyNewPosts;
     }
 }

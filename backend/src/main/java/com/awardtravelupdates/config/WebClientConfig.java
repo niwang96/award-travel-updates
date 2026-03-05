@@ -28,4 +28,14 @@ public class WebClientConfig {
                 .defaultHeader("Authorization", "Bearer " + properties.apiKey())
                 .build();
     }
+
+    @Bean
+    public WebClient rssClient(WebClient.Builder builder) {
+        return builder
+                .defaultHeader("User-Agent", "AwardTravelUpdates/1.0")
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(config -> config.defaultCodecs().maxInMemorySize(MAX_BUFFER_SIZE))
+                        .build())
+                .build();
+    }
 }
