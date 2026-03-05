@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,7 +64,7 @@ public class SummaryService {
     private Mono<SummaryResult> getSummaryForSubreddit(
             String subreddit,
             List<RedditPost> currentPosts,
-            java.util.function.Function<List<RedditPost>, Mono<List<String>>> agentFn) {
+            Function<List<RedditPost>, Mono<List<String>>> agentFn) {
 
         return Mono.fromCallable(() -> summaryRepository.findById(subreddit))
                 .subscribeOn(Schedulers.boundedElastic())

@@ -22,7 +22,7 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient groqClient(WebClient.Builder builder, AnthropicProperties properties) {
+    public WebClient groqClient(WebClient.Builder builder, GroqProperties properties) {
         return builder
                 .baseUrl("https://api.groq.com/openai/v1")
                 .defaultHeader("Authorization", "Bearer " + properties.apiKey())

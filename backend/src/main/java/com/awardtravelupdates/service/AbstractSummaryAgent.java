@@ -45,7 +45,7 @@ public abstract class AbstractSummaryAgent {
     }
 
     private List<String> parseResponse(JsonNode response) {
-        String text = response.path("choices").get(0).path("message").path("content").asText();
+        String text = extractResponseText(response);
         text = stripMarkdownFences(text);
         try {
             JsonNode arr = objectMapper.readTree(text);
@@ -54,6 +54,10 @@ public abstract class AbstractSummaryAgent {
         } catch (Exception e) {
             return List.of(text);
         }
+    }
+
+    private String extractResponseText(JsonNode response) {
+        return response.path("choices").get(0).path("message").path("content").asText();
     }
 
     private String stripMarkdownFences(String text) {

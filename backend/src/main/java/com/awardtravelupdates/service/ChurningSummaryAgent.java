@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 @Service
 public class ChurningSummaryAgent extends AbstractSummaryAgent {
 
+    private static final String NEWS_FILTER_KEYWORD = "news and updates";
+
     private static final String SYSTEM_PROMPT =
             "You are a credit card rewards analyst. Only report on these specific categories: " +
             "(1) New transfer partners added by banks, " +
@@ -30,7 +32,7 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
     @Override
     public Mono<List<String>> summarize(List<RedditPost> posts) {
         List<RedditPost> filtered = posts.stream()
-                .filter(p -> p.title().toLowerCase().contains("news and updates"))
+                .filter(p -> p.title().toLowerCase().contains(NEWS_FILTER_KEYWORD))
                 .toList();
 
         if (filtered.isEmpty()) {
