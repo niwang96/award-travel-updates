@@ -29,4 +29,18 @@ public class HttpClientConfig {
                 .defaultHeader("User-Agent", "AwardTravelUpdates/1.0")
                 .build();
     }
+
+    @Bean
+    public RestClient googleAuthClient(RestClient.Builder builder) {
+        return builder
+                .baseUrl("https://oauth2.googleapis.com")
+                .build();
+    }
+
+    @Bean
+    public RestClient gmailApiClient(RestClient.Builder builder) {
+        return builder
+                .baseUrl("https://gmail.googleapis.com")
+                .build();
+    }
 }

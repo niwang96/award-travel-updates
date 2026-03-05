@@ -25,6 +25,9 @@ dist/
 *.swp
 .DS_Store
 
+# ── Secrets ──────────────────────────────────────────────────
+backend/src/main/resources/application.properties
+
 # ── Logs ─────────────────────────────────────────────────────
 *.log
 logs/
