@@ -1,6 +1,6 @@
 package com.awardtravelupdates.model;
 
-import com.awardtravelupdates.config.StringListConverter;
+import com.awardtravelupdates.config.SummaryUpdateListConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -21,9 +21,9 @@ public class SubredditSummary {
     @Id
     private String subreddit;
 
-    @Convert(converter = StringListConverter.class)
+    @Convert(converter = SummaryUpdateListConverter.class)
     @Column(columnDefinition = "TEXT")
-    private List<String> bullets;
+    private List<SummaryUpdate> updates;
 
     private Instant lastUpdated;
 

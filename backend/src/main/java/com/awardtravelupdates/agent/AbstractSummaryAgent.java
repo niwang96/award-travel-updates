@@ -1,5 +1,6 @@
 package com.awardtravelupdates.agent;
 
+import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +24,7 @@ public abstract class AbstractSummaryAgent {
 
     public abstract String getSubreddit();
 
-    public abstract Mono<List<String>> summarize(List<RedditPost> posts);
+    public abstract Mono<AgentOutput> summarize(List<RedditPost> posts);
 
     protected Mono<List<String>> callApi(String systemPrompt, String userMessage) {
         Map<String, Object> body = Map.of(

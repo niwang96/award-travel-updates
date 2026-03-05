@@ -1,10 +1,12 @@
 package com.awardtravelupdates.service;
 
+import com.awardtravelupdates.agent.AbstractSummaryAgent;
 import com.awardtravelupdates.constants.RedditConstants;
+import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
 import com.awardtravelupdates.model.SummaryResult;
-import com.awardtravelupdates.agent.AbstractSummaryAgent;
+import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.SummaryRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -63,7 +65,7 @@ public class SummaryService {
     public Mono<SummaryResult> getSummary(String subreddit) {
         AbstractSummaryAgent agent = agentsBySubreddit.get(subreddit);
         if (agent == null) {
-            return Mono.just(new SummaryResult(List.of("Unknown subreddit: " + subreddit), true));
+            return Mono.just(new SummaryResult(List.of(new SummaryUpdate("Unknown subreddit: " + subreddit, null)), true));
         }
         return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)
                 .flatMap(allPosts -> {
@@ -86,13 +88,13 @@ public class SummaryService {
                     boolean needsRefresh = optionalSummary.isEmpty() || isStale(optionalSummary.get(), currentCount);
 
                     if (!needsRefresh) {
-                        return Mono.just(new SummaryResult(optionalSummary.get().getBullets(), false));
+                        return Mono.just(new SummaryResult(optionalSummary.get().getUpdates(), false));
                     }
 
                     return agent.summarize(currentPosts)
-                            .flatMap(bullets -> Mono.fromCallable(() -> {
-                                summaryRepository.save(new SubredditSummary(subreddit, bullets, Instant.now(), currentCount));
-                                return new SummaryResult(bullets, false);
+                            .flatMap(output -> Mono.fromCallable(() -> {
+                                summaryRepository.save(new SubredditSummary(subreddit, output.updates(), Instant.now(), currentCount));
+                                return new SummaryResult(output.updates(), false);
                             }).subscribeOn(Schedulers.boundedElastic()))
                             .onErrorResume(error -> staleFallback(optionalSummary));
                 });
@@ -100,9 +102,10 @@ public class SummaryService {
 
     private Mono<SummaryResult> staleFallback(Optional<SubredditSummary> cached) {
         if (cached.isPresent()) {
-            return Mono.just(new SummaryResult(cached.get().getBullets(), true));
+            return Mono.just(new SummaryResult(cached.get().getUpdates(), true));
         }
-        return Mono.just(new SummaryResult(List.of("Summary unavailable — please try again later."), true));
+        return Mono.just(new SummaryResult(
+                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null)), true));
     }
 
     private boolean isStale(SubredditSummary cached, int currentPostCount) {

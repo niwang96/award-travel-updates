@@ -1,0 +1,3 @@
+package com.awardtravelupdates.model;
+
+public record SummaryUpdate(String text, String source) {}

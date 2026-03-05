@@ -19,6 +19,8 @@ public final class RedditConstants {
     public static final Map<String, String> COMMENT_TITLE_FILTERS = Map.of(
             SUBREDDIT_CHURNING, CHURNING_COMMENT_TITLE_FILTER);
 
+    public static final String REDDIT_BASE_URL = "https://www.reddit.com";
+
     public static final String FIELD_DATA = "data";
     public static final String FIELD_CHILDREN = "children";
     public static final String FIELD_ID = "id";
@@ -27,6 +29,7 @@ public final class RedditConstants {
     public static final String FIELD_BODY = "body";
     public static final String FIELD_UPS = "ups";
     public static final String FIELD_CREATED_UTC = "created_utc";
+    public static final String FIELD_PERMALINK = "permalink";
 
     public static final int DEFAULT_LIMIT = 25;
     public static final int TOP_COMMENTS_LIMIT = 10;

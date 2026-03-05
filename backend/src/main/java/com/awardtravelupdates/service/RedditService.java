@@ -54,6 +54,7 @@ public class RedditService {
         String selftext = postData.path(RedditConstants.FIELD_SELFTEXT).asText();
         int upvotes = postData.path(RedditConstants.FIELD_UPS).asInt();
         long createdUtc = postData.path(RedditConstants.FIELD_CREATED_UTC).asLong();
+        String permalink = RedditConstants.REDDIT_BASE_URL + postData.path(RedditConstants.FIELD_PERMALINK).asText();
 
         if (isBefore(createdUtc, createdAfter)) {
             return Mono.empty();
@@ -63,9 +64,9 @@ public class RedditService {
                 (titleFilter == null || title.toLowerCase().contains(titleFilter));
         if (shouldFetchComments) {
             return fetchComments(subreddit, id, createdAfter)
-                    .map(comments -> new RedditPost(subreddit, title, selftext, upvotes, createdUtc, comments));
+                    .map(comments -> new RedditPost(subreddit, title, selftext, upvotes, createdUtc, comments, permalink));
         }
-        return Mono.just(new RedditPost(subreddit, title, selftext, upvotes, createdUtc, List.of()));
+        return Mono.just(new RedditPost(subreddit, title, selftext, upvotes, createdUtc, List.of(), permalink));
     }
 
     private boolean isBefore(long createdUtc, Instant cutoff) {
