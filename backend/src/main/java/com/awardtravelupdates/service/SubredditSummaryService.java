@@ -2,7 +2,6 @@ package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.agent.AbstractRedditSummaryAgent;
 import com.awardtravelupdates.constants.RedditConstants;
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
 import com.awardtravelupdates.model.SummaryResult;
@@ -50,7 +49,7 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
     }
 
     @Override
-    protected AgentOutput summarize(String id, List<RedditPost> posts) {
+    protected List<SummaryUpdate> summarize(String id, List<RedditPost> posts) {
         return agentsBySubreddit.get(id).summarize(posts);
     }
 

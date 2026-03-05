@@ -1,6 +1,5 @@
 package com.awardtravelupdates.agent;
 
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.BlogPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,7 +38,7 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
 
     public abstract String getDisplayName();
 
-    public AgentOutput summarize(List<BlogPost> posts) {
+    public List<SummaryUpdate> summarize(List<BlogPost> posts) {
         if (posts.isEmpty()) {
             return fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.");
         }
@@ -55,6 +54,6 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
                 (text, post) -> new SummaryUpdate(text, post.url(), post.publishedUtc()));
         return updates.isEmpty()
                 ? fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.")
-                : new AgentOutput(updates);
+                : updates;
     }
 }

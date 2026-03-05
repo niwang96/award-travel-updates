@@ -1,7 +1,6 @@
 package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.model.AbstractCachedSummary;
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.model.SummaryUpdate;
 
@@ -50,9 +49,9 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
         }
 
         try {
-            AgentOutput output = summarize(id, posts);
-            saveToCache(id, output.updates(), currentCount);
-            return new SummaryResult(output.updates(), false);
+            List<SummaryUpdate> updates = summarize(id, posts);
+            saveToCache(id, updates, currentCount);
+            return new SummaryResult(updates, false);
         } catch (Exception e) {
             return buildFallbackResult(cached);
         }
@@ -72,7 +71,7 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
 
     protected abstract List<POST> fetchPosts(String id);
 
-    protected abstract AgentOutput summarize(String id, List<POST> posts);
+    protected abstract List<SummaryUpdate> summarize(String id, List<POST> posts);
 
     protected abstract Optional<CACHED> findCached(String id);
 

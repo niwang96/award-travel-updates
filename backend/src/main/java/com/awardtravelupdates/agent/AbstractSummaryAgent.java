@@ -1,6 +1,5 @@
 package com.awardtravelupdates.agent;
 
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,8 +26,8 @@ public abstract class AbstractSummaryAgent {
     private final RestClient groqClient;
     private final ObjectMapper objectMapper;
 
-    protected static AgentOutput fallbackOutput(String message) {
-        return new AgentOutput(List.of(new SummaryUpdate(message, null, null)));
+    protected static List<SummaryUpdate> fallbackOutput(String message) {
+        return List.of(new SummaryUpdate(message, null, null));
     }
 
     protected JsonNode callApiJson(String systemPrompt, String userMessage) {

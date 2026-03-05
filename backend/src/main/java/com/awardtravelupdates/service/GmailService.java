@@ -1,7 +1,6 @@
 package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.config.GoogleProperties;
-import com.awardtravelupdates.model.EmailDeal;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -70,21 +69,13 @@ public class GmailService {
             List<String> messageIds = searchMessages(accessToken);
             List<SummaryUpdate> results = new ArrayList<>();
             for (String id : messageIds) {
-                fetchDealsFromMessage(accessToken, id).stream()
-                        .map(this::toSummaryUpdate)
-                        .forEach(results::add);
+                results.addAll(fetchDealsFromMessage(accessToken, id));
             }
             return results;
         } catch (Exception e) {
             log.error("Failed to fetch email deals: {}", e.getMessage());
             return List.of();
         }
-    }
-
-    private SummaryUpdate toSummaryUpdate(EmailDeal deal) {
-        String text = String.format("%,d points for %s on %s for %s booked through %s",
-                deal.points(), deal.cabin(), deal.airline(), deal.flightDate(), deal.redemptionProgram());
-        return new SummaryUpdate(text, deal.url(), deal.receivedAt());
     }
 
     private String getAccessToken() {
@@ -129,7 +120,7 @@ public class GmailService {
         return ids;
     }
 
-    private List<EmailDeal> fetchDealsFromMessage(String accessToken, String messageId) {
+    private List<SummaryUpdate> fetchDealsFromMessage(String accessToken, String messageId) {
         try {
             JsonNode message = gmailApiClient.get()
                     .uri("/gmail/v1/users/me/messages/{id}?format=full", messageId)
@@ -184,7 +175,7 @@ public class GmailService {
         return "";
     }
 
-    private List<EmailDeal> parseDeals(String body, String subject, long receivedAt) {
+    private List<SummaryUpdate> parseDeals(String body, String subject, long receivedAt) {
         // Extract link map from the "Links:" footer before removing [N] markers
         Map<String, String> linkMap = new HashMap<>();
         Matcher linkMatcher = LINK_MAP_PATTERN.matcher(body);
@@ -199,7 +190,7 @@ public class GmailService {
                 .replaceAll("\r\n", "\n")
                 .replaceAll("(\\d{1,3}),(\\d{3})\\d+\\s+PTS", "$1,$2 PTS");
 
-        List<EmailDeal> deals = new ArrayList<>();
+        List<SummaryUpdate> deals = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         Matcher startMatcher = DEAL_BLOCK_PATTERN.matcher(originalNormalized);
 
@@ -236,15 +227,13 @@ public class GmailService {
             try {
                 int points = Integer.parseInt(fieldsMatcher.group(1).replace(",", ""));
                 String airlineAndCabin = fieldsMatcher.group(2).trim();
-                String origin = toTitleCase(fieldsMatcher.group(3).trim());
-                String destinationRaw = fieldsMatcher.group(4).trim();
-                String via = fieldsMatcher.group(5) != null ? fieldsMatcher.group(5).trim() : null;
                 String flightDate = fieldsMatcher.group(6).trim();
                 String redemptionProgram = fieldsMatcher.group(7).trim();
 
                 String cabin = extractCabin(airlineAndCabin);
                 String airline = extractAirline(airlineAndCabin, cabin);
-                String destination = toTitleCase(destinationRaw);
+                String origin = toTitleCase(fieldsMatcher.group(3).trim());
+                String destination = toTitleCase(fieldsMatcher.group(4).trim());
 
                 // Deduplicate by key fields
                 String dedupeKey = points + "|" + airline + "|" + origin + "|" + destination + "|" + flightDate;
@@ -252,8 +241,9 @@ public class GmailService {
                     continue;
                 }
 
-                deals.add(new EmailDeal(points, airline, cabin, origin, destination, via,
-                        flightDate, redemptionProgram, dealUrl, subject, receivedAt));
+                String text = String.format("%,d points for %s on %s for %s booked through %s",
+                        points, cabin, airline, flightDate, redemptionProgram);
+                deals.add(new SummaryUpdate(text, dealUrl, receivedAt));
             } catch (Exception e) {
                 log.warn("Failed to parse deal fields from block: {}", block);
             }

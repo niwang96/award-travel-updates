@@ -2,7 +2,6 @@ package com.awardtravelupdates.service;
 
 import com.awardtravelupdates.agent.AbstractBlogSummaryAgent;
 import com.awardtravelupdates.constants.BlogConstants;
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.BlogPost;
 import com.awardtravelupdates.model.BlogSummary;
 import com.awardtravelupdates.model.SummaryResult;
@@ -50,7 +49,7 @@ public class BlogSummaryService extends AbstractCachingSummaryService<BlogPost, 
     }
 
     @Override
-    protected AgentOutput summarize(String id, List<BlogPost> posts) {
+    protected List<SummaryUpdate> summarize(String id, List<BlogPost> posts) {
         return agentsByBlogId.get(id).summarize(posts);
     }
 

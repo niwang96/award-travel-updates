@@ -1,7 +1,6 @@
 package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.constants.RedditConstants;
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,7 +36,7 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
     }
 
     @Override
-    public AgentOutput summarize(List<RedditPost> posts) {
+    public List<SummaryUpdate> summarize(List<RedditPost> posts) {
         List<RedditPost> filtered = posts.stream()
                 .filter(p -> p.upvotes() > 0)
                 .toList();
@@ -62,6 +61,6 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
                 (text, post) -> new SummaryUpdate(text, post.permalink(), post.createdUtc()));
         return updates.isEmpty()
                 ? fallbackOutput("No major award chart updates or program changes right now — check back soon.")
-                : new AgentOutput(updates);
+                : updates;
     }
 }

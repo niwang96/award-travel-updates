@@ -1,7 +1,6 @@
 package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.constants.RedditConstants;
-import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
@@ -48,7 +47,7 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
     }
 
     @Override
-    public AgentOutput summarize(List<RedditPost> posts) {
+    public List<SummaryUpdate> summarize(List<RedditPost> posts) {
         Instant cutoff = Instant.now().minus(POSTS_DAYS_LIMIT, ChronoUnit.DAYS);
         List<RedditPost> filtered = posts.stream()
                 .filter(p -> Instant.ofEpochSecond(p.createdUtc()).isAfter(cutoff))
@@ -72,8 +71,7 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key deals and updates from these churning posts and their comments:\n\n" + numberedPosts);
 
-        List<SummaryUpdate> updates = parseUpdates(json, filtered);
-        return new AgentOutput(updates);
+        return parseUpdates(json, filtered);
     }
 
     private List<SummaryUpdate> parseUpdates(JsonNode json, List<RedditPost> posts) {
