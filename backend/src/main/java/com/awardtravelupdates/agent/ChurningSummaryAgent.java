@@ -1,4 +1,4 @@
-package com.awardtravelupdates.service;
+package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;

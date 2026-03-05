@@ -2,6 +2,7 @@ package com.awardtravelupdates.controller;
 
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.service.SummaryService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,13 +13,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class SummaryController {
 
     private final SummaryService summaryService;
-
-    public SummaryController(SummaryService summaryService) {
-        this.summaryService = summaryService;
-    }
 
     @GetMapping("/summaries")
     public Mono<Map<String, SummaryResult>> getSummaries() {

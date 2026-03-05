@@ -4,6 +4,7 @@ import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
 import com.awardtravelupdates.model.SummaryResult;
+import com.awardtravelupdates.agent.AbstractSummaryAgent;
 import com.awardtravelupdates.repository.SummaryRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

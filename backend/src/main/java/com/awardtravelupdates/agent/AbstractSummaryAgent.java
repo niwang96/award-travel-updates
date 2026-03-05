@@ -1,4 +1,4 @@
-package com.awardtravelupdates.service;
+package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
