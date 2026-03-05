@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -91,17 +92,22 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
         return updates;
     }
 
-    private String resolveSource(int commentIndex, RedditPost post, List<RedditComment> comments) {
+    private Optional<RedditComment> resolveComment(int commentIndex, List<RedditComment> comments) {
         if (commentIndex > 0 && commentIndex <= comments.size()) {
-            return comments.get(commentIndex - 1).permalink();
+            return Optional.of(comments.get(commentIndex - 1));
         }
-        return post.permalink();
+        return Optional.empty();
+    }
+
+    private String resolveSource(int commentIndex, RedditPost post, List<RedditComment> comments) {
+        return resolveComment(commentIndex, comments)
+                .map(RedditComment::permalink)
+                .orElse(post.permalink());
     }
 
     private long resolveTimestamp(int commentIndex, RedditPost post, List<RedditComment> comments) {
-        if (commentIndex > 0 && commentIndex <= comments.size()) {
-            return comments.get(commentIndex - 1).createdUtc();
-        }
-        return post.createdUtc();
+        return resolveComment(commentIndex, comments)
+                .map(RedditComment::createdUtc)
+                .orElse(post.createdUtc());
     }
 }
