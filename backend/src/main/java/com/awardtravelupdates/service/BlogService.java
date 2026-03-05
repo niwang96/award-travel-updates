@@ -62,11 +62,11 @@ public class BlogService {
     }
 
     private String extractContent(SyndEntry entry) {
-        if (!entry.getContents().isEmpty()) {
-            return entry.getContents().get(0).getValue();
-        }
         if (entry.getDescription() != null) {
             return entry.getDescription().getValue();
+        }
+        if (!entry.getContents().isEmpty()) {
+            return entry.getContents().get(0).getValue();
         }
         return "";
     }

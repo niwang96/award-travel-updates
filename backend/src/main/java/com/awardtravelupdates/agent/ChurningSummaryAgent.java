@@ -33,7 +33,8 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
             "(4) Changes to existing transfer partner ratios or program terms, " +
             "(5) Lounge news (new openings, closures, or access policy changes), " +
             "(6) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
-            "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure. " +
+            "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
+            "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
             "Skip trip reports, general questions, data points, and anything that doesn't fit these categories. " +
             "Return a JSON array of objects with \"text\" (the bullet) and \"commentIndex\" (1-based index of the comment it came from, or 0 if from the post title). " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"commentIndex\": 3}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"commentIndex\": 7}, {\"text\": \"Citi AA Platinum Select: 80k AA miles for $1k spend (inflight offer)\", \"commentIndex\": 12}]";
