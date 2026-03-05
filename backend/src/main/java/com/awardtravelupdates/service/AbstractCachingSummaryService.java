@@ -4,77 +4,71 @@ import com.awardtravelupdates.model.AbstractCachedSummary;
 import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.model.SummaryUpdate;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public abstract class AbstractCachingSummaryService<POST, CACHED extends AbstractCachedSummary> {
 
-    public Mono<Map<String, SummaryResult>> getSummaries() {
-        List<Mono<Map.Entry<String, SummaryResult>>> monos = getIds().stream()
-                .map(id -> fetchPosts(id)
-                        .flatMap(posts -> computeSummary(id, posts))
-                        .map(result -> Map.entry(id, result)))
-                .toList();
+    public Map<String, SummaryResult> getSummaries() {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<Map.Entry<String, SummaryResult>>> futures = getIds().stream()
+                    .map(id -> CompletableFuture.supplyAsync(
+                            () -> Map.entry(id, getSummary(id)), executor))
+                    .toList();
 
-        return Mono.zip(monos, results -> {
-            Map<String, SummaryResult> map = new HashMap<>();
-            for (Object r : results) {
-                @SuppressWarnings("unchecked")
-                Map.Entry<String, SummaryResult> entry = (Map.Entry<String, SummaryResult>) r;
-                map.put(entry.getKey(), entry.getValue());
-            }
-            return map;
-        });
+            return futures.stream()
+                    .map(CompletableFuture::join)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
     }
 
-    public Mono<SummaryResult> getSummary(String id) {
+    public SummaryResult getSummary(String id) {
         if (!hasAgent(id)) {
-            return Mono.just(unknownIdResult(id));
+            return unknownIdResult(id);
         }
-        return fetchPosts(id).flatMap(posts -> computeSummary(id, posts));
+        List<POST> posts = fetchPosts(id);
+        return computeSummary(id, posts);
     }
 
-    private Mono<SummaryResult> computeSummary(String id, List<POST> posts) {
-        return Mono.fromCallable(() -> findCached(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalCached -> {
-                    int currentCount = posts.size();
-                    boolean needsRefresh = optionalCached.isEmpty() || isStale(optionalCached.get(), currentCount);
+    private SummaryResult computeSummary(String id, List<POST> posts) {
+        Optional<CACHED> cached = findCached(id);
+        int currentCount = posts.size();
+        boolean needsRefresh = cached.isEmpty() || isStale(cached.get(), currentCount);
 
-                    if (!needsRefresh) {
-                        return Mono.just(new SummaryResult(optionalCached.get().getUpdates(), false));
-                    }
+        if (!needsRefresh) {
+            return new SummaryResult(cached.get().getUpdates(), false);
+        }
 
-                    return summarize(id, posts)
-                            .flatMap(output -> Mono.fromCallable(() -> {
-                                saveToCache(id, output.updates(), currentCount);
-                                return new SummaryResult(output.updates(), false);
-                            }).subscribeOn(Schedulers.boundedElastic()))
-                            .onErrorResume(error -> buildFallbackResult(optionalCached));
-                });
+        try {
+            AgentOutput output = summarize(id, posts);
+            saveToCache(id, output.updates(), currentCount);
+            return new SummaryResult(output.updates(), false);
+        } catch (Exception e) {
+            return buildFallbackResult(cached);
+        }
     }
 
-    private Mono<SummaryResult> buildFallbackResult(Optional<CACHED> cached) {
+    private SummaryResult buildFallbackResult(Optional<CACHED> cached) {
         if (cached.isPresent()) {
-            return Mono.just(new SummaryResult(cached.get().getUpdates(), true));
+            return new SummaryResult(cached.get().getUpdates(), true);
         }
-        return Mono.just(new SummaryResult(
-                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null, null)), true));
+        return new SummaryResult(
+                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null, null)), true);
     }
 
     protected abstract Set<String> getIds();
 
     protected abstract boolean hasAgent(String id);
 
-    protected abstract Mono<List<POST>> fetchPosts(String id);
+    protected abstract List<POST> fetchPosts(String id);
 
-    protected abstract Mono<AgentOutput> summarize(String id, List<POST> posts);
+    protected abstract AgentOutput summarize(String id, List<POST> posts);
 
     protected abstract Optional<CACHED> findCached(String id);
 

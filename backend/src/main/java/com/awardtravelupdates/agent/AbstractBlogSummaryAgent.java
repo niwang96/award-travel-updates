@@ -5,8 +5,7 @@ import com.awardtravelupdates.model.BlogPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +24,15 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             "(6) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
             "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
             "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
-            "Skip trip reports, opinion pieces, general news, debit cards, cashback-only products, and anything that doesn't fit these categories. " +
+            "Skip trip reports, opinion pieces, general news, debit cards, cashback-only products, " +
+            "gift card deals, shopping portal cashback offers, bank account bonuses, fuel point promotions, " +
+            "credit card statement credits or merchant offers, and anything that doesn't fit these categories. " +
+            "Note: shopping portal offers that earn loyalty miles or points (not cashback) qualify under category (8). " +
             "Return a JSON array of objects with \"text\" (the bullet) and \"postIndex\" (1-based index of the post it came from). " +
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 2}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"postIndex\": 5}]";
 
-    public AbstractBlogSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
+    public AbstractBlogSummaryAgent(RestClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
     }
 
@@ -38,24 +40,22 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
 
     public abstract String getDisplayName();
 
-    public Mono<AgentOutput> summarize(List<BlogPost> posts) {
+    public AgentOutput summarize(List<BlogPost> posts) {
         if (posts.isEmpty()) {
-            return Mono.just(fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon."));
+            return fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.");
         }
 
         String numberedPosts = IntStream.range(0, posts.size())
                 .mapToObj(i -> "[" + (i + 1) + "] " + posts.get(i).title() + "\n" + posts.get(i).content())
                 .collect(Collectors.joining("\n\n"));
 
-        return callApiJson(SYSTEM_PROMPT,
-                "Summarize the key news and updates from these blog posts:\n\n" + numberedPosts)
-                .map(json -> parseUpdates(json, posts))
-                .map(updates -> {
-                    if (updates.isEmpty()) {
-                        return fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.");
-                    }
-                    return new AgentOutput(updates);
-                });
+        JsonNode json = callApiJson(SYSTEM_PROMPT,
+                "Summarize the key news and updates from these blog posts:\n\n" + numberedPosts);
+
+        List<SummaryUpdate> updates = parseUpdates(json, posts);
+        return updates.isEmpty()
+                ? fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.")
+                : new AgentOutput(updates);
     }
 
     private List<SummaryUpdate> parseUpdates(JsonNode json, List<BlogPost> posts) {

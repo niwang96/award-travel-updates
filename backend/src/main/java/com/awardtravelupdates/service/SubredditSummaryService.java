@@ -1,6 +1,6 @@
 package com.awardtravelupdates.service;
 
-import com.awardtravelupdates.agent.AbstractSummaryAgent;
+import com.awardtravelupdates.agent.AbstractRedditSummaryAgent;
 import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.AgentOutput;
 import com.awardtravelupdates.model.RedditPost;
@@ -9,7 +9,6 @@ import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.SummaryRepository;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -24,15 +23,15 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
 
     private final RedditService redditService;
     private final SummaryRepository summaryRepository;
-    private final Map<String, AbstractSummaryAgent> agentsBySubreddit;
+    private final Map<String, AbstractRedditSummaryAgent> agentsBySubreddit;
 
     public SubredditSummaryService(RedditService redditService,
                                    SummaryRepository summaryRepository,
-                                   List<AbstractSummaryAgent> agents) {
+                                   List<AbstractRedditSummaryAgent> agents) {
         this.redditService = redditService;
         this.summaryRepository = summaryRepository;
         this.agentsBySubreddit = agents.stream()
-                .collect(Collectors.toMap(AbstractSummaryAgent::getSubreddit, a -> a));
+                .collect(Collectors.toMap(AbstractRedditSummaryAgent::getSubreddit, a -> a));
     }
 
     @Override
@@ -46,12 +45,12 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
     }
 
     @Override
-    protected Mono<List<RedditPost>> fetchPosts(String id) {
+    protected List<RedditPost> fetchPosts(String id) {
         return redditService.fetchPostsForSubreddit(id);
     }
 
     @Override
-    protected Mono<AgentOutput> summarize(String id, List<RedditPost> posts) {
+    protected AgentOutput summarize(String id, List<RedditPost> posts) {
         return agentsBySubreddit.get(id).summarize(posts);
     }
 

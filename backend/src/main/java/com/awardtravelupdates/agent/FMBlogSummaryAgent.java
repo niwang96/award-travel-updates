@@ -3,12 +3,12 @@ package com.awardtravelupdates.agent;
 import com.awardtravelupdates.constants.BlogConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 @Service
 public class FMBlogSummaryAgent extends AbstractBlogSummaryAgent {
 
-    public FMBlogSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
+    public FMBlogSummaryAgent(RestClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
     }
 

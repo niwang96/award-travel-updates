@@ -6,9 +6,7 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.web.client.RestClient;
 
 import java.io.StringReader;
 import java.time.Instant;
@@ -18,25 +16,26 @@ import java.util.List;
 @Service
 public class BlogService {
 
-    private final WebClient rssClient;
+    private final RestClient rssClient;
 
-    public BlogService(WebClient rssClient) {
+    public BlogService(RestClient rssClient) {
         this.rssClient = rssClient;
     }
 
-    public Mono<List<BlogPost>> fetchPostsForBlog(String blogId) {
+    public List<BlogPost> fetchPostsForBlog(String blogId) {
         String rssUrl = BlogConstants.BLOG_RSS_URLS.get(blogId);
         if (rssUrl == null) {
-            return Mono.just(List.of());
+            return List.of();
         }
-
-        return rssClient.get()
-                .uri(rssUrl)
-                .retrieve()
-                .bodyToMono(String.class)
-                .publishOn(Schedulers.boundedElastic())
-                .map(xml -> parseFeed(xml, blogId))
-                .onErrorReturn(List.of());
+        try {
+            String xml = rssClient.get()
+                    .uri(rssUrl)
+                    .retrieve()
+                    .body(String.class);
+            return parseFeed(xml, blogId);
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     private List<BlogPost> parseFeed(String xml, String blogId) {

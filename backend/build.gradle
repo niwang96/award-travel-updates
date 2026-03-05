@@ -20,9 +20,6 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // HTTP client for fetching Reddit / blog data
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
     // JSON parsing
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 

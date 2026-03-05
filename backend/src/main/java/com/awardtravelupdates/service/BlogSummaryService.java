@@ -9,7 +9,6 @@ import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.BlogSummaryRepository;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -46,12 +45,12 @@ public class BlogSummaryService extends AbstractCachingSummaryService<BlogPost, 
     }
 
     @Override
-    protected Mono<List<BlogPost>> fetchPosts(String id) {
+    protected List<BlogPost> fetchPosts(String id) {
         return blogService.fetchPostsForBlog(id);
     }
 
     @Override
-    protected Mono<AgentOutput> summarize(String id, List<BlogPost> posts) {
+    protected AgentOutput summarize(String id, List<BlogPost> posts) {
         return agentsByBlogId.get(id).summarize(posts);
     }
 
