@@ -5,6 +5,8 @@ import com.awardtravelupdates.model.SummaryUpdate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
@@ -16,6 +18,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public abstract class AbstractSummaryAgent {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractSummaryAgent.class);
+
     private static final String MODEL = "llama-3.3-70b-versatile";
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
@@ -25,15 +29,6 @@ public abstract class AbstractSummaryAgent {
 
     protected static AgentOutput fallbackOutput(String message) {
         return new AgentOutput(List.of(new SummaryUpdate(message, null, null)));
-    }
-
-    protected List<String> callApi(String systemPrompt, String userMessage) {
-        return callWithRetry(
-                () -> {
-                    JsonNode response = postToGroq(systemPrompt, userMessage);
-                    return parseStringList(extractText(response));
-                },
-                List.of("Error generating summary."));
     }
 
     protected JsonNode callApiJson(String systemPrompt, String userMessage) {
@@ -68,16 +63,20 @@ public abstract class AbstractSummaryAgent {
             try {
                 return call.get();
             } catch (HttpClientErrorException e) {
-                if (e.getStatusCode() != HttpStatus.TOO_MANY_REQUESTS || attempt == MAX_RETRIES) {
-                    break;
-                }
-                try {
-                    Thread.sleep(RETRY_DELAY_MS * (1L << attempt));
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
+                if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && attempt < MAX_RETRIES) {
+                    log.warn("Groq rate limit hit (attempt {}/{}), retrying after backoff", attempt + 1, MAX_RETRIES);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS * (1L << attempt));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    log.error("Groq API error ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
                     break;
                 }
             } catch (Exception e) {
+                log.error("Groq call failed: {}", e.getMessage());
                 break;
             }
         }
@@ -86,17 +85,6 @@ public abstract class AbstractSummaryAgent {
 
     private String extractText(JsonNode response) {
         return response.path("choices").get(0).path("message").path("content").asText();
-    }
-
-    private List<String> parseStringList(String text) {
-        text = stripMarkdownFences(text);
-        try {
-            JsonNode arr = objectMapper.readTree(text);
-            return objectMapper.convertValue(arr,
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
-        } catch (Exception e) {
-            return List.of(text);
-        }
     }
 
     private JsonNode parseJson(String text) {

@@ -72,6 +72,9 @@ public class BlogService {
 
     private String stripHtml(String html) {
         if (html == null || html.isBlank()) return "";
-        return html.replaceAll("<[^>]+>", " ").replaceAll("\\s{2,}", " ").trim();
+        String stripped = html.replaceAll("<[^>]+>", " ").replaceAll("\\s{2,}", " ").trim();
+        return stripped.length() > BlogConstants.BLOG_MAX_CONTENT_CHARS
+                ? stripped.substring(0, BlogConstants.BLOG_MAX_CONTENT_CHARS)
+                : stripped;
     }
 }

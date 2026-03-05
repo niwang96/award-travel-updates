@@ -16,16 +16,20 @@ import java.util.stream.Collectors;
 public abstract class AbstractCachingSummaryService<POST, CACHED extends AbstractCachedSummary> {
 
     public Map<String, SummaryResult> getSummaries() {
+        // Fetch posts for all sources in parallel (pure network I/O, no Groq calls)
+        Map<String, List<POST>> allPosts;
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<CompletableFuture<Map.Entry<String, SummaryResult>>> futures = getIds().stream()
-                    .map(id -> CompletableFuture.supplyAsync(
-                            () -> Map.entry(id, getSummary(id)), executor))
+            List<CompletableFuture<Map.Entry<String, List<POST>>>> futures = getIds().stream()
+                    .map(id -> CompletableFuture.supplyAsync(() -> Map.entry(id, fetchPosts(id)), executor))
                     .toList();
-
-            return futures.stream()
+            allPosts = futures.stream()
                     .map(CompletableFuture::join)
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
+
+        // Summarize sequentially to avoid hitting Groq rate limits
+        return getIds().stream()
+                .collect(Collectors.toMap(id -> id, id -> computeSummary(id, allPosts.get(id))));
     }
 
     public SummaryResult getSummary(String id) {
