@@ -9,10 +9,8 @@ public final class RedditConstants {
 
     public static final String SUBREDDIT_AWARD_TRAVEL = "awardtravel";
     public static final String SUBREDDIT_CHURNING = "churning";
-    public static final String SUBREDDIT_POINTS_TRAVEL = "pointstravel";
-
     public static final List<String> SUBREDDITS = List.of(
-            SUBREDDIT_AWARD_TRAVEL, SUBREDDIT_CHURNING, SUBREDDIT_POINTS_TRAVEL);
+            SUBREDDIT_AWARD_TRAVEL, SUBREDDIT_CHURNING);
 
     public static final Set<String> SUBREDDITS_WITH_COMMENTS = Set.of(SUBREDDIT_CHURNING);
 
