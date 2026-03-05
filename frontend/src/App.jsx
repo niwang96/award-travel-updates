@@ -1,34 +1,48 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [deals, setDeals] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function fetchDeals() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/email-deals')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setDeals(data)
+    } catch (e) {
+      setError('Failed to load deals. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="container">
+      <button className="cta-button" onClick={fetchDeals} disabled={loading}>
+        {loading ? 'Loading…' : 'GIVE ME AWARD FLIGHT DEALS'}
+      </button>
+
+      {error && <p className="error">{error}</p>}
+
+      {deals !== null && (
+        deals.length === 0
+          ? <p className="empty">No deals found.</p>
+          : <ul className="deals-list">
+              {deals.map((deal, i) => (
+                <li key={i} className="deal-item">
+                  {deal.source
+                    ? <a href={deal.source} target="_blank" rel="noopener noreferrer">{deal.text}</a>
+                    : deal.text}
+                </li>
+              ))}
+            </ul>
+      )}
+    </div>
   )
 }
 
