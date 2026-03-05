@@ -88,7 +88,8 @@ public class RedditService {
                             .filter(data -> !isBefore(data.path(RedditConstants.FIELD_CREATED_UTC).asLong(), createdAfter))
                             .map(data -> new RedditComment(
                                     data.path(RedditConstants.FIELD_BODY).asText(),
-                                    data.path(RedditConstants.FIELD_UPS).asInt()))
+                                    data.path(RedditConstants.FIELD_UPS).asInt(),
+                                    RedditConstants.REDDIT_BASE_URL + data.path(RedditConstants.FIELD_PERMALINK).asText()))
                             .sorted(Comparator.comparingInt(RedditComment::upvotes).reversed())
                             .limit(RedditConstants.TOP_COMMENTS_LIMIT)
                             .toList();

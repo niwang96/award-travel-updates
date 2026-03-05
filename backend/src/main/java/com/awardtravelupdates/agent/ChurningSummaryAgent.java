@@ -2,8 +2,10 @@ package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.AgentOutput;
+import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,8 +14,10 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class ChurningSummaryAgent extends AbstractSummaryAgent {
@@ -28,8 +32,8 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
             "(4) Changes to existing transfer partner ratios or program terms, " +
             "(5) Lounge news (new openings, closures, or access policy changes). " +
             "Skip trip reports, general questions, data points, and anything that doesn't fit these categories. " +
-            "Return a JSON array of concise bullet strings (no markdown fences). " +
-            "Example: [\"Chase added Wyndham as 1:1 transfer partner\", \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\"]";
+            "Return a JSON array of objects with \"text\" (the bullet) and \"commentIndex\" (1-based index of the comment it came from, or 0 if from the post title). " +
+            "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"commentIndex\": 3}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"commentIndex\": 7}]";
 
     public ChurningSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
@@ -54,20 +58,42 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
         }
 
         return Flux.fromIterable(filtered)
-                .flatMap(post -> {
-                    String comments = post.comments().stream()
-                            .map(c -> "  [" + c.upvotes() + " upvotes] " + c.body())
-                            .collect(Collectors.joining("\n"));
-                    String postText = "Post: " + post.title() + "\nComments:\n" + comments;
-                    return callApi(SYSTEM_PROMPT,
-                            "Summarize the key deals and updates from this churning post and its top comments:\n\n" + postText)
-                            .map(bullets -> bullets.stream()
-                                    .map(text -> new SummaryUpdate(text, post.permalink()))
-                                    .collect(Collectors.toList()));
-                })
+                .flatMap(post -> summarizePost(post))
                 .collectList()
                 .map(lists -> new AgentOutput(lists.stream()
                         .flatMap(List::stream)
                         .collect(Collectors.toList())));
+    }
+
+    private Mono<List<SummaryUpdate>> summarizePost(RedditPost post) {
+        List<RedditComment> comments = post.comments();
+
+        String numberedComments = IntStream.range(0, comments.size())
+                .mapToObj(i -> "[" + (i + 1) + "] " + comments.get(i).body())
+                .collect(Collectors.joining("\n"));
+
+        String userMessage = "Post: " + post.title() + "\n\nComments:\n" + numberedComments;
+
+        return callApiJson(SYSTEM_PROMPT,
+                "Summarize the key deals and updates from this churning post and its comments:\n\n" + userMessage)
+                .map(json -> parseUpdates(json, post, comments));
+    }
+
+    private List<SummaryUpdate> parseUpdates(JsonNode json, RedditPost post, List<RedditComment> comments) {
+        List<SummaryUpdate> updates = new ArrayList<>();
+        for (JsonNode item : json) {
+            String text = item.path("text").asText();
+            int commentIndex = item.path("commentIndex").asInt(0);
+            String source = resolveSource(commentIndex, post, comments);
+            updates.add(new SummaryUpdate(text, source));
+        }
+        return updates;
+    }
+
+    private String resolveSource(int commentIndex, RedditPost post, List<RedditComment> comments) {
+        if (commentIndex > 0 && commentIndex <= comments.size()) {
+            return comments.get(commentIndex - 1).permalink();
+        }
+        return post.permalink();
     }
 }

@@ -47,6 +47,35 @@ public abstract class AbstractSummaryAgent {
                 .onErrorReturn(List.of("Error generating summary."));
     }
 
+    protected Mono<JsonNode> callApiJson(String systemPrompt, String userMessage) {
+        Map<String, Object> body = Map.of(
+                "model", MODEL,
+                "max_tokens", 1024,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userMessage)
+                )
+        );
+
+        return groqClient.post()
+                .uri("/chat/completions")
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(response -> {
+                    String text = extractResponseText(response);
+                    text = stripMarkdownFences(text);
+                    try {
+                        return objectMapper.readTree(text);
+                    } catch (Exception e) {
+                        return objectMapper.createArrayNode();
+                    }
+                })
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                        .filter(e -> e instanceof WebClientResponseException.TooManyRequests))
+                .onErrorReturn(objectMapper.createArrayNode());
+    }
+
     private List<String> parseResponse(JsonNode response) {
         String text = extractResponseText(response);
         text = stripMarkdownFences(text);
