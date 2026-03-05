@@ -1,5 +1,6 @@
 package com.awardtravelupdates.service;
 
+import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,11 @@ public class ChurningSummaryAgent extends AbstractSummaryAgent {
 
     public ChurningSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
+    }
+
+    @Override
+    public String getSubreddit() {
+        return RedditConstants.SUBREDDIT_CHURNING;
     }
 
     @Override

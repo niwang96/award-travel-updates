@@ -21,6 +21,8 @@ public abstract class AbstractSummaryAgent {
     private final WebClient groqClient;
     private final ObjectMapper objectMapper;
 
+    public abstract String getSubreddit();
+
     public abstract Mono<List<String>> summarize(List<RedditPost> posts);
 
     protected Mono<List<String>> callApi(String systemPrompt, String userMessage) {

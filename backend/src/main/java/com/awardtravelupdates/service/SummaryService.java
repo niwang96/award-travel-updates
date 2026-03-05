@@ -5,21 +5,19 @@ import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SubredditSummary;
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.repository.SummaryRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class SummaryService {
 
     private static final int STALE_HOURS = 3;
@@ -27,9 +25,16 @@ public class SummaryService {
 
     private final RedditService redditService;
     private final SummaryRepository summaryRepository;
-    private final AwardTravelSummaryAgent awardTravelAgent;
-    private final ChurningSummaryAgent churningAgent;
-    private final PointsTravelSummaryAgent pointsTravelAgent;
+    private final Map<String, AbstractSummaryAgent> agentsBySubreddit;
+
+    public SummaryService(RedditService redditService,
+                          SummaryRepository summaryRepository,
+                          List<AbstractSummaryAgent> agents) {
+        this.redditService = redditService;
+        this.summaryRepository = summaryRepository;
+        this.agentsBySubreddit = agents.stream()
+                .collect(Collectors.toMap(AbstractSummaryAgent::getSubreddit, a -> a));
+    }
 
     public Mono<Map<String, SummaryResult>> getSummaries() {
         return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)
@@ -37,34 +42,41 @@ public class SummaryService {
                     Map<String, List<RedditPost>> bySubreddit = allPosts.stream()
                             .collect(Collectors.groupingBy(RedditPost::subreddit));
 
-                    Mono<SummaryResult> awardTravelMono = getSummaryForSubreddit(
-                            RedditConstants.SUBREDDIT_AWARD_TRAVEL,
-                            bySubreddit.getOrDefault(RedditConstants.SUBREDDIT_AWARD_TRAVEL, List.of()),
-                            awardTravelAgent::summarize);
+                    List<Mono<Map.Entry<String, SummaryResult>>> monos = agentsBySubreddit.keySet().stream()
+                            .map(subreddit -> getSummary(subreddit, bySubreddit.getOrDefault(subreddit, List.of()))
+                                    .map(result -> Map.entry(subreddit, result)))
+                            .toList();
 
-                    Mono<SummaryResult> churningMono = getSummaryForSubreddit(
-                            RedditConstants.SUBREDDIT_CHURNING,
-                            bySubreddit.getOrDefault(RedditConstants.SUBREDDIT_CHURNING, List.of()),
-                            churningAgent::summarize);
-
-                    Mono<SummaryResult> pointsTravelMono = getSummaryForSubreddit(
-                            RedditConstants.SUBREDDIT_POINTS_TRAVEL,
-                            bySubreddit.getOrDefault(RedditConstants.SUBREDDIT_POINTS_TRAVEL, List.of()),
-                            pointsTravelAgent::summarize);
-
-                    return Mono.zip(awardTravelMono, churningMono, pointsTravelMono)
-                            .map(tuple -> Map.of(
-                                    RedditConstants.SUBREDDIT_AWARD_TRAVEL, tuple.getT1(),
-                                    RedditConstants.SUBREDDIT_CHURNING, tuple.getT2(),
-                                    RedditConstants.SUBREDDIT_POINTS_TRAVEL, tuple.getT3()
-                            ));
+                    return Mono.zip(monos, results -> {
+                        Map<String, SummaryResult> map = new HashMap<>();
+                        for (Object r : results) {
+                            @SuppressWarnings("unchecked")
+                            Map.Entry<String, SummaryResult> entry = (Map.Entry<String, SummaryResult>) r;
+                            map.put(entry.getKey(), entry.getValue());
+                        }
+                        return map;
+                    });
                 });
     }
 
-    private Mono<SummaryResult> getSummaryForSubreddit(
+    public Mono<SummaryResult> getSummary(String subreddit) {
+        AbstractSummaryAgent agent = agentsBySubreddit.get(subreddit);
+        if (agent == null) {
+            return Mono.just(new SummaryResult(List.of("Unknown subreddit: " + subreddit), true));
+        }
+        return redditService.fetchAllPosts(RedditConstants.DEFAULT_LIMIT, null)
+                .flatMap(allPosts -> {
+                    List<RedditPost> posts = allPosts.stream()
+                            .filter(p -> p.subreddit().equals(subreddit))
+                            .toList();
+                    return getSummary(subreddit, posts);
+                });
+    }
+
+    private Mono<SummaryResult> getSummary(
             String subreddit,
-            List<RedditPost> currentPosts,
-            Function<List<RedditPost>, Mono<List<String>>> agentFn) {
+            List<RedditPost> currentPosts) {
+        AbstractSummaryAgent agent = agentsBySubreddit.get(subreddit);
 
         return Mono.fromCallable(() -> summaryRepository.findById(subreddit))
                 .subscribeOn(Schedulers.boundedElastic())
@@ -76,7 +88,7 @@ public class SummaryService {
                         return Mono.just(new SummaryResult(optionalSummary.get().getBullets(), false));
                     }
 
-                    return agentFn.apply(currentPosts)
+                    return agent.summarize(currentPosts)
                             .flatMap(bullets -> Mono.fromCallable(() -> {
                                 summaryRepository.save(new SubredditSummary(subreddit, bullets, Instant.now(), currentCount));
                                 return new SummaryResult(bullets, false);

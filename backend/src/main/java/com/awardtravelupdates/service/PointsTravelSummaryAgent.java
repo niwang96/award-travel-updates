@@ -1,5 +1,6 @@
 package com.awardtravelupdates.service;
 
+import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,11 @@ public class PointsTravelSummaryAgent extends AbstractSummaryAgent {
 
     public PointsTravelSummaryAgent(WebClient groqClient, ObjectMapper objectMapper) {
         super(groqClient, objectMapper);
+    }
+
+    @Override
+    public String getSubreddit() {
+        return RedditConstants.SUBREDDIT_POINTS_TRAVEL;
     }
 
     @Override
