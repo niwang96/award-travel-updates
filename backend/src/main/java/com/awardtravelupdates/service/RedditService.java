@@ -5,6 +5,8 @@ import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -18,6 +20,8 @@ import java.util.stream.StreamSupport;
 @Service
 @RequiredArgsConstructor
 public class RedditService {
+
+    private static final Logger log = LoggerFactory.getLogger(RedditService.class);
 
     private final RestClient redditClient;
 
@@ -42,6 +46,7 @@ public class RedditService {
                     .filter(Objects::nonNull)
                     .toList();
         } catch (Exception e) {
+            log.error("Failed to fetch posts for r/{}: {}", subreddit, e.getMessage());
             return List.of();
         }
     }
@@ -99,6 +104,7 @@ public class RedditService {
                     .limit(RedditConstants.TOP_COMMENTS_LIMIT)
                     .toList();
         } catch (Exception e) {
+            log.error("Failed to fetch comments for r/{} post {}: {}", subreddit, postId, e.getMessage());
             return List.of();
         }
     }

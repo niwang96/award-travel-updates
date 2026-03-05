@@ -84,7 +84,12 @@ public abstract class AbstractSummaryAgent {
     }
 
     private String extractText(JsonNode response) {
-        return response.path("choices").get(0).path("message").path("content").asText();
+        JsonNode choices = response.path("choices");
+        if (!choices.isArray() || choices.isEmpty()) {
+            log.error("Unexpected Groq response structure — missing choices: {}", response);
+            return "[]";
+        }
+        return choices.get(0).path("message").path("content").asText();
     }
 
     private JsonNode parseJson(String text) {
@@ -92,6 +97,7 @@ public abstract class AbstractSummaryAgent {
         try {
             return objectMapper.readTree(text);
         } catch (Exception e) {
+            log.error("Failed to parse Groq response as JSON: {}", text);
             return objectMapper.createArrayNode();
         }
     }

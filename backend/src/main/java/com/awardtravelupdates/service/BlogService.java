@@ -5,6 +5,8 @@ import com.awardtravelupdates.model.BlogPost;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -15,6 +17,8 @@ import java.util.List;
 
 @Service
 public class BlogService {
+
+    private static final Logger log = LoggerFactory.getLogger(BlogService.class);
 
     private final RestClient rssClient;
 
@@ -34,6 +38,7 @@ public class BlogService {
                     .body(String.class);
             return parseFeed(xml, blogId);
         } catch (Exception e) {
+            log.error("Failed to fetch RSS feed for {}: {}", blogId, e.getMessage());
             return List.of();
         }
     }
@@ -49,6 +54,7 @@ public class BlogService {
                     .map(entry -> toBlogPost(entry, blogId))
                     .toList();
         } catch (Exception e) {
+            log.error("Failed to parse RSS feed for {}: {}", blogId, e.getMessage());
             return List.of();
         }
     }
