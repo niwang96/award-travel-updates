@@ -18,7 +18,7 @@ public class FlightDealListConverter implements AttributeConverter<List<FlightDe
         try {
             return objectMapper.writeValueAsString(deals);
         } catch (Exception e) {
-            return "[]";
+            throw new IllegalArgumentException("Failed to serialize FlightDeal list to JSON", e);
         }
     }
 
@@ -27,7 +27,7 @@ public class FlightDealListConverter implements AttributeConverter<List<FlightDe
         try {
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (Exception e) {
-            return List.of();
+            throw new IllegalArgumentException("Failed to deserialize JSON to FlightDeal list", e);
         }
     }
 }

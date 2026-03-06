@@ -1,12 +1,11 @@
 package com.awardtravelupdates.service;
 
+import com.awardtravelupdates.accessor.DiscordAccessor;
 import com.awardtravelupdates.model.SummaryResult;
 import com.awardtravelupdates.model.SummaryUpdate;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DiscordNotificationService {
 
     private static final Map<String, String> SECTION_LABELS = Map.of(
@@ -30,33 +30,15 @@ public class DiscordNotificationService {
     private static final int DISCORD_MAX_CHARS = 2000;
 
     private final CombinedSummaryService combinedSummaryService;
-    private final String webhookUrl;
-    private final RestClient restClient;
-
-    public DiscordNotificationService(CombinedSummaryService combinedSummaryService,
-                                      @Value("${discord.webhook.url:}") String webhookUrl,
-                                      RestClient.Builder builder) {
-        this.combinedSummaryService = combinedSummaryService;
-        this.webhookUrl = webhookUrl;
-        this.restClient = builder.build();
-    }
+    private final DiscordAccessor discordAccessor;
 
     public void send() {
-        if (webhookUrl.isBlank()) {
-            throw new IllegalStateException("discord.webhook.url is not configured in application.properties");
-        }
-
         Map<String, SummaryResult> data = combinedSummaryService.getSummaries();
         List<String> messages = formatMessages(data);
 
         log.info("Sending {} Discord message(s)", messages.size());
         for (String message : messages) {
-            restClient.post()
-                    .uri(webhookUrl)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("content", message))
-                    .retrieve()
-                    .toBodilessEntity();
+            discordAccessor.sendMessage(message);
         }
         log.info("Discord notification sent successfully");
     }

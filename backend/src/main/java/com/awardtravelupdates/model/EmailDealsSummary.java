@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class EmailDealsSummary {
 
     @Id
@@ -25,9 +27,4 @@ public class EmailDealsSummary {
 
     private Instant lastUpdated;
 
-    public EmailDealsSummary(String id, List<FlightDeal> deals, Instant lastUpdated) {
-        this.id = id;
-        this.deals = deals;
-        this.lastUpdated = lastUpdated;
-    }
 }

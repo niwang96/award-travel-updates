@@ -18,7 +18,7 @@ public class SummaryUpdateListConverter implements AttributeConverter<List<Summa
         try {
             return objectMapper.writeValueAsString(updates);
         } catch (Exception e) {
-            return "[]";
+            throw new IllegalArgumentException("Failed to serialize SummaryUpdate list to JSON", e);
         }
     }
 
@@ -27,7 +27,7 @@ public class SummaryUpdateListConverter implements AttributeConverter<List<Summa
         try {
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (Exception e) {
-            return List.of();
+            throw new IllegalArgumentException("Failed to deserialize JSON to SummaryUpdate list", e);
         }
     }
 }
