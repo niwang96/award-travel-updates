@@ -5,10 +5,9 @@ import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
+import com.awardtravelupdates.service.GroqAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -40,9 +39,9 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
             "and \"commentIndex\" (1-based index of the comment within that post, or 0 if from the post title). " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 1, \"commentIndex\": 3}]";
 
-    public RChurningSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+    public RChurningSummaryAgent(GroqAccessor groqAccessor,
                                  PostSummaryCacheRepository postSummaryCacheRepository) {
-        super(groqClient, objectMapper, postSummaryCacheRepository);
+        super(groqAccessor, postSummaryCacheRepository);
     }
 
     @Override

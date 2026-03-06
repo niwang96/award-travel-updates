@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @Service
 public class SubredditSummaryService extends AbstractCachingSummaryService<RedditPost, SubredditSummary> {
 
-    private final RedditService redditService;
+    private final RedditAccessor redditAccessor;
     private final SubredditSummaryRepository subredditSummaryRepository;
     private final Map<String, AbstractRedditSummaryAgent> agentsBySubreddit;
 
-    public SubredditSummaryService(RedditService redditService,
+    public SubredditSummaryService(RedditAccessor redditAccessor,
                                    SubredditSummaryRepository subredditSummaryRepository,
                                    List<AbstractRedditSummaryAgent> agents) {
-        this.redditService = redditService;
+        this.redditAccessor = redditAccessor;
         this.subredditSummaryRepository = subredditSummaryRepository;
         this.agentsBySubreddit = agents.stream()
                 .collect(Collectors.toMap(AbstractRedditSummaryAgent::getSubreddit, a -> a));
@@ -45,7 +45,7 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
 
     @Override
     protected List<RedditPost> fetchPosts(String id) {
-        return redditService.fetchPostsForSubreddit(id);
+        return redditAccessor.fetchPostsForSubreddit(id);
     }
 
     @Override

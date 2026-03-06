@@ -2,16 +2,15 @@ package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.constants.BlogConstants;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.awardtravelupdates.service.GroqAccessor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 @Service
 public class DoCBlogSummaryAgent extends AbstractBlogSummaryAgent {
 
-    public DoCBlogSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+    public DoCBlogSummaryAgent(GroqAccessor groqAccessor,
                                PostSummaryCacheRepository postSummaryCacheRepository) {
-        super(groqClient, objectMapper, postSummaryCacheRepository);
+        super(groqAccessor, postSummaryCacheRepository);
     }
 
     @Override

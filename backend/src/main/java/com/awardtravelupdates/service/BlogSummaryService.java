@@ -20,14 +20,14 @@ import java.util.stream.Collectors;
 @Service
 public class BlogSummaryService extends AbstractCachingSummaryService<BlogPost, BlogSummary> {
 
-    private final BlogService blogService;
+    private final BlogAccessor blogAccessor;
     private final BlogSummaryRepository blogSummaryRepository;
     private final Map<String, AbstractBlogSummaryAgent> agentsByBlogId;
 
-    public BlogSummaryService(BlogService blogService,
+    public BlogSummaryService(BlogAccessor blogAccessor,
                               BlogSummaryRepository blogSummaryRepository,
                               List<AbstractBlogSummaryAgent> agents) {
-        this.blogService = blogService;
+        this.blogAccessor = blogAccessor;
         this.blogSummaryRepository = blogSummaryRepository;
         this.agentsByBlogId = agents.stream()
                 .collect(Collectors.toMap(AbstractBlogSummaryAgent::getBlogId, a -> a));
@@ -45,7 +45,7 @@ public class BlogSummaryService extends AbstractCachingSummaryService<BlogPost, 
 
     @Override
     protected List<BlogPost> fetchPosts(String id) {
-        return blogService.fetchPostsForBlog(id);
+        return blogAccessor.fetchPostsForBlog(id);
     }
 
     @Override

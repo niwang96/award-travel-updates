@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GmailService {
+public class GmailAccessor {
 
     private static final String GMAIL_QUERY = "from:hello@roame.travel label:Flight Deals";
     private static final int MAX_EMAILS = 10;

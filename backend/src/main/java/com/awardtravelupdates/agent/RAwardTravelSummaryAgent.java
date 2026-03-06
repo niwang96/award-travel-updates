@@ -4,10 +4,9 @@ import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
+import com.awardtravelupdates.service.GroqAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +32,9 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
 
     private static final int SELFTEXT_MAX_CHARS = 500;
 
-    public RAwardTravelSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+    public RAwardTravelSummaryAgent(GroqAccessor groqAccessor,
                                     PostSummaryCacheRepository postSummaryCacheRepository) {
-        super(groqClient, objectMapper, postSummaryCacheRepository);
+        super(groqAccessor, postSummaryCacheRepository);
     }
 
     @Override

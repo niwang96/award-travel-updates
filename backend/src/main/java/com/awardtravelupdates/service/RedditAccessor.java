@@ -17,7 +17,7 @@ import java.util.stream.StreamSupport;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RedditService {
+public class RedditAccessor {
 
     private final RestClient redditClient;
 

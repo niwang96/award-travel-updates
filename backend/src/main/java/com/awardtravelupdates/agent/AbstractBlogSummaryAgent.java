@@ -3,9 +3,8 @@ package com.awardtravelupdates.agent;
 import com.awardtravelupdates.model.BlogPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
+import com.awardtravelupdates.service.GroqAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +31,9 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 2}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"postIndex\": 5}]";
 
-    public AbstractBlogSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+    public AbstractBlogSummaryAgent(GroqAccessor groqAccessor,
                                     PostSummaryCacheRepository postSummaryCacheRepository) {
-        super(groqClient, objectMapper, postSummaryCacheRepository);
+        super(groqAccessor, postSummaryCacheRepository);
     }
 
     public abstract String getBlogId();

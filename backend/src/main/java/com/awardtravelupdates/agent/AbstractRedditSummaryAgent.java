@@ -3,16 +3,15 @@ package com.awardtravelupdates.agent;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.client.RestClient;
+import com.awardtravelupdates.service.GroqAccessor;
 
 import java.util.List;
 
 public abstract class AbstractRedditSummaryAgent extends AbstractSummaryAgent {
 
-    public AbstractRedditSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+    public AbstractRedditSummaryAgent(GroqAccessor groqAccessor,
                                       PostSummaryCacheRepository postSummaryCacheRepository) {
-        super(groqClient, objectMapper, postSummaryCacheRepository);
+        super(groqAccessor, postSummaryCacheRepository);
     }
 
     public abstract String getSubreddit();
