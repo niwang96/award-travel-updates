@@ -34,18 +34,30 @@ award-travel-updates/
 
 The system uses a two-level cache to minimize LLM calls and external API requests.
 
-- **Level 1 (summary cache):** `BlogSummary`/`SubredditSummary` DB rows, keyed by source ID, TTL 3 hours. A fresh entry is returned immediately without fetching any posts.
+- **Level 1 (summary cache):** `BlogSummary`/`SubredditSummary`/`EmailDealsSummary` DB rows, keyed by source ID, TTL 3 hours. A fresh entry is returned immediately without fetching from external APIs.
 - **Level 2 (per-post LLM cache):** `PostSummaryCache` DB rows, keyed by post URL, permanent. When regenerating an L1 summary, individual posts that were already summarized reuse their stored LLM output instead of calling Groq again.
 
+**Reddit/Blog flow** (via `AbstractCachingSummaryService` + Agent):
 ```
 Request → Controller
            → AbstractCachingSummaryService
                ├─ L1 cache hit? → return immediately
                └─ L1 miss/stale:
-                   ├─ *Accessor fetches posts (Reddit/RSS/Gmail)   [parallel]
+                   ├─ *Accessor fetches posts (Reddit/RSS)   [parallel]
                    └─ Agent.summarize(posts)
                        ├─ L2 cache hit per post → use stored text
                        └─ L2 miss → GroqAccessor (LLM) → save to L2
+                   → save to L1
+                   → return
+```
+
+**Email deals flow** (via `EmailDealsSummaryService`, no LLM step):
+```
+Request → EmailDealsController
+           → EmailDealsSummaryService
+               ├─ L1 cache hit? → return immediately
+               └─ L1 miss/stale:
+                   → GmailAccessor.fetchRecentDeals()
                    → save to L1
                    → return
 ```
