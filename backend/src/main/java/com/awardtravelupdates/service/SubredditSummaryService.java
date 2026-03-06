@@ -71,6 +71,6 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
 
     @Override
     protected SummaryResult unknownIdResult(String id) {
-        return new SummaryResult(List.of(new SummaryUpdate("Unknown subreddit: " + id, null, null)), true);
+        return new SummaryResult(List.of(new SummaryUpdate("Unknown subreddit: " + id, null, null, null)), true);
     }
 }

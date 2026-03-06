@@ -67,7 +67,7 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key news and updates from these awardtravel posts:\n\n" + numberedPosts);
         return parseUpdates(json, posts,
-                (text, post) -> new SummaryUpdate(text, post.permalink(), post.createdUtc()));
+                (item, post) -> new SummaryUpdate(item.path("text").asText(), post.permalink(), post.createdUtc(), "flights"));
     }
 
     private String formatPost(int index, RedditPost post) {

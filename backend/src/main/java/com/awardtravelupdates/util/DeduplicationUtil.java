@@ -15,7 +15,7 @@ public final class DeduplicationUtil {
             "as", "are", "was", "be", "has", "have", "had", "will", "which"
     );
 
-    private static final double SIMILARITY_THRESHOLD = 0.4;
+    private static final double SIMILARITY_THRESHOLD = 0.25;
 
     private static final List<String> PRIORITY = List.of(
             "doctorofcredit", "frequentmiler", "awardtravel", "churning"

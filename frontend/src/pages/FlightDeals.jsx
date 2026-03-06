@@ -54,7 +54,9 @@ export default function FlightDeals() {
   const sorted = sortDeals(deals, sort.col, sort.dir)
 
   return (
-    <table className="deals-table">
+    <>
+      <h1>Recent Flight Deal Alerts from Roame</h1>
+      <table className="deals-table">
       <thead>
         <tr>
           {COLUMNS.map(({ key, label }) => (
@@ -87,5 +89,6 @@ export default function FlightDeals() {
         ))}
       </tbody>
     </table>
+    </>
   )
 }

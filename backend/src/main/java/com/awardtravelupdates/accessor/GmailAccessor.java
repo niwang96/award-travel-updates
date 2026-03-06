@@ -51,7 +51,7 @@ public class GmailAccessor {
             "(\\d{1,3}(?:,\\d{3})*)\\s+PTS\\s+" +
             "(.+?)\\s+FROM\\s+" +
             "(.+?)\\s+TO\\s+" +
-            "(.+?)(?:\\s+\\(VIA\\s+([A-Z0-9]+)\\))?\\s+ON\\s+" +
+            "(.+?)(?:\\s+\\(VIA\\s+([A-Z0-9]+)\\))?(?:\\s+ON)?\\s+" +
             "(\\d+/\\d+/\\d+)" +
             ".+?Redeem via\\s+(.+)",
             Pattern.CASE_INSENSITIVE);

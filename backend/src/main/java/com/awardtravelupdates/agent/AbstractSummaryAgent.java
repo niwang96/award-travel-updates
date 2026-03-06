@@ -80,7 +80,7 @@ public abstract class AbstractSummaryAgent {
     }
 
     protected static List<SummaryUpdate> fallbackOutput(String message) {
-        return List.of(new SummaryUpdate(message, null, null));
+        return List.of(new SummaryUpdate(message, null, null, null));
     }
 
     protected JsonNode callApiJson(String systemPrompt, String userMessage) {
@@ -88,12 +88,12 @@ public abstract class AbstractSummaryAgent {
     }
 
     protected <P> List<SummaryUpdate> parseUpdates(JsonNode json, List<P> posts,
-                                                   BiFunction<String, P, SummaryUpdate> toUpdate) {
+                                                   BiFunction<JsonNode, P, SummaryUpdate> toUpdate) {
         List<SummaryUpdate> updates = new ArrayList<>();
         for (JsonNode item : json) {
             int postIndex = item.path("postIndex").asInt(0);
             if (postIndex >= 1 && postIndex <= posts.size()) {
-                updates.add(toUpdate.apply(item.path("text").asText(), posts.get(postIndex - 1)));
+                updates.add(toUpdate.apply(item, posts.get(postIndex - 1)));
             }
         }
         return updates;

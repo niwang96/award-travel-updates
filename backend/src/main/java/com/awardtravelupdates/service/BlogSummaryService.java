@@ -71,6 +71,6 @@ public class BlogSummaryService extends AbstractCachingSummaryService<BlogPost, 
 
     @Override
     protected SummaryResult unknownIdResult(String id) {
-        return new SummaryResult(List.of(new SummaryUpdate("Unknown blog: " + id, null, null)), true);
+        return new SummaryResult(List.of(new SummaryUpdate("Unknown blog: " + id, null, null, null)), true);
     }
 }

@@ -36,8 +36,13 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
             "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
             "Skip trip reports, general questions, data points, and anything that doesn't fit these categories. " +
             "Return a JSON array of objects with \"text\" (the bullet), \"postIndex\" (1-based index of the post), " +
-            "and \"commentIndex\" (1-based index of the comment within that post, or 0 if from the post title). " +
-            "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 1, \"commentIndex\": 3}]";
+            "\"commentIndex\" (1-based index of the comment within that post, or 0 if from the post title), " +
+            "and \"topic\" chosen from exactly these values: credit_cards, flights, hotels, lounges, status, deals. " +
+            "Topic assignment: categories 1-4 → credit_cards; category 5 → lounges; " +
+            "categories 6-7 for airline/award programs → flights; categories 6-7 for hotel programs → hotels; " +
+            "categories 6-7 for bank/credit card programs → credit_cards; " +
+            "category 8 for status matches or challenges → status; all other category 8 items → deals. " +
+            "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 1, \"commentIndex\": 3, \"topic\": \"credit_cards\"}]";
 
     public RChurningSummaryAgent(GroqAccessor groqAccessor,
                                  PostSummaryCacheRepository postSummaryCacheRepository) {
@@ -114,7 +119,8 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
                 updatesByThreadIndex.computeIfAbsent(threadIndex, k -> new ArrayList<>())
                         .add(new SummaryUpdate(item.path("text").asText(),
                                 resolveSource(commentIndex, thread),
-                                resolveTimestamp(commentIndex, thread)));
+                                resolveTimestamp(commentIndex, thread),
+                                item.path("topic").asText(null)));
             }
         }
         return updatesByThreadIndex;

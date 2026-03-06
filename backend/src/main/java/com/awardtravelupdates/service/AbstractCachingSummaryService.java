@@ -61,7 +61,7 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
             return new SummaryResult(cached.get().getUpdates(), true);
         }
         return new SummaryResult(
-                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null, null)), true);
+                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null, null, null)), true);
     }
 
     protected abstract Set<String> getIds();

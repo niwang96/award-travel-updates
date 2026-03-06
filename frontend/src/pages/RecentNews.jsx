@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { API } from '../api'
 
-const SECTIONS = [
-  { key: 'doctorofcredit', label: 'Doctor of Credit' },
-  { key: 'frequentmiler', label: 'Frequent Miler' },
-  { key: 'awardtravel', label: 'r/awardtravel' },
-  { key: 'churning', label: 'r/churning' },
+const TOPICS = [
+  { key: 'credit_cards', label: 'Credit Cards' },
+  { key: 'flights',      label: 'Flights' },
+  { key: 'hotels',       label: 'Hotels' },
+  { key: 'lounges',      label: 'Lounges' },
+  { key: 'status',       label: 'Status & Elite' },
+  { key: 'deals',        label: 'Deals' },
 ]
 
 export default function RecentNews() {
@@ -38,29 +40,41 @@ export default function RecentNews() {
   if (loading) return <p className="empty">Loading news…</p>
   if (error) return <p className="error">{error}</p>
 
+  // Flatten all updates from all sources, tagging each with whether its source is stale
+  const allUpdates = Object.values(data).flatMap(section =>
+    (section.updates ?? []).map(update => ({ ...update, stale: section.stale }))
+  )
+
+  // Group by topic
+  const byTopic = Object.fromEntries(
+    TOPICS.map(({ key }) => [key, allUpdates.filter(u => u.topic === key)])
+  )
+
+  const anyWithTopic = TOPICS.some(({ key }) => byTopic[key].length > 0)
+  if (!anyWithTopic) return <p className="empty">No updates.</p>
+
   return (
     <>
-      {SECTIONS.map(({ key, label }) => {
-        const section = data[key]
-        if (!section) return null
+      <h1>Recent Award Travel and Credit Card News from Blogs and Reddit</h1>
+      {TOPICS.map(({ key, label }) => {
+        const updates = byTopic[key]
+        if (updates.length === 0) return null
+        const stale = updates.some(u => u.stale)
         return (
           <div key={key} className="news-section">
             <h2 className="news-section-title">
               {label}
-              {section.stale && <span className="stale-badge">stale</span>}
+              {stale && <span className="stale-badge">stale</span>}
             </h2>
-            {section.updates?.length > 0
-              ? <ul className="item-list">
-                  {section.updates.map((update, i) => (
-                    <li key={i} className="item">
-                      {update.source
-                        ? <a href={update.source} target="_blank" rel="noopener noreferrer">{update.text}</a>
-                        : update.text}
-                    </li>
-                  ))}
-                </ul>
-              : <p className="empty">No updates.</p>
-            }
+            <ul className="item-list">
+              {updates.map((update, i) => (
+                <li key={i} className="item">
+                  {update.source
+                    ? <a href={update.source} target="_blank" rel="noopener noreferrer">{update.text}</a>
+                    : update.text}
+                </li>
+              ))}
+            </ul>
           </div>
         )
       })}
