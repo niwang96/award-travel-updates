@@ -20,7 +20,8 @@ award-travel-updates/
 │   ├── constants/      # Reddit and blog constants (URLs, limits, staleness thresholds)
 │   ├── controller/     # REST endpoints (Blog, Subreddit, EmailDeals, Health)
 │   ├── agent/          # LLM summarization agents (one per source)
-│   ├── service/        # Orchestration services + external API accessors
+│   ├── service/        # Orchestration services (caching, summary coordination)
+│   ├── accessor/       # External API clients (Reddit, RSS, Gmail, Groq)
 │   ├── model/          # Domain records + JPA entities
 │   └── repository/     # Spring Data JPA repositories
 └── frontend/src/
