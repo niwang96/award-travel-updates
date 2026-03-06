@@ -27,7 +27,8 @@ award-travel-updates/
 └── frontend/src/
     ├── pages/          # Home, FlightDeals, RecentNews
     ├── components/     # Nav
-    └── hooks/          # useFetch
+    ├── hooks/          # useFetch
+    └── utils/          # deduplication (cross-source Jaccard similarity)
 ```
 
 ## Architecture Overview
@@ -72,6 +73,10 @@ Request → EmailDealsController
 | `GroqAccessor` | Groq LLM API, with 3-retry exponential backoff on rate limits |
 
 All sources are fetched in parallel via a virtual thread pool; LLM calls are sequential to avoid Groq rate limits.
+
+### Frontend deduplication
+
+After merging all 4 sources, `deduplicateData` (in `frontend/src/utils/deduplication.js`) removes near-duplicate updates across sections using Jaccard similarity on word tokens (stop-words stripped). If two updates share ≥40% of their word sets, the lower-priority source's copy is dropped. Priority: `doctorofcredit → frequentmiler → awardtravel → churning`.
 
 ### Agent classes
 

@@ -1,5 +1,6 @@
 package com.awardtravelupdates.service;
 
+import com.awardtravelupdates.accessor.RedditAccessor;
 import com.awardtravelupdates.agent.AbstractRedditSummaryAgent;
 import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;

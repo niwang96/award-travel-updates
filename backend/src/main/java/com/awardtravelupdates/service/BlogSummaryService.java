@@ -1,5 +1,6 @@
 package com.awardtravelupdates.service;
 
+import com.awardtravelupdates.accessor.BlogAccessor;
 import com.awardtravelupdates.agent.AbstractBlogSummaryAgent;
 import com.awardtravelupdates.constants.BlogConstants;
 import com.awardtravelupdates.model.BlogPost;
