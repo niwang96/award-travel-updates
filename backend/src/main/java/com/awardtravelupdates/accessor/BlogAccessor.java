@@ -1,4 +1,4 @@
-package com.awardtravelupdates.service;
+package com.awardtravelupdates.accessor;
 
 import com.awardtravelupdates.constants.BlogConstants;
 import com.awardtravelupdates.model.BlogPost;

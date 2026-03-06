@@ -2,7 +2,7 @@ package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.constants.BlogConstants;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
-import com.awardtravelupdates.service.GroqAccessor;
+import com.awardtravelupdates.accessor.GroqAccessor;
 import org.springframework.stereotype.Service;
 
 @Service

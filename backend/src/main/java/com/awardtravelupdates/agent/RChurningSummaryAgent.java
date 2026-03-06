@@ -5,7 +5,7 @@ import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
-import com.awardtravelupdates.service.GroqAccessor;
+import com.awardtravelupdates.accessor.GroqAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 

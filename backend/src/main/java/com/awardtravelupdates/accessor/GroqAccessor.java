@@ -1,4 +1,4 @@
-package com.awardtravelupdates.service;
+package com.awardtravelupdates.accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

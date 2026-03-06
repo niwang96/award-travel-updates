@@ -1,4 +1,4 @@
-package com.awardtravelupdates.service;
+package com.awardtravelupdates.accessor;
 
 import com.awardtravelupdates.config.GoogleProperties;
 import com.awardtravelupdates.model.SummaryUpdate;

@@ -1,7 +1,7 @@
 package com.awardtravelupdates.controller;
 
 import com.awardtravelupdates.model.SummaryUpdate;
-import com.awardtravelupdates.service.GmailAccessor;
+import com.awardtravelupdates.accessor.GmailAccessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

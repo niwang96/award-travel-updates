@@ -3,7 +3,7 @@ package com.awardtravelupdates.agent;
 import com.awardtravelupdates.model.BlogPost;
 import com.awardtravelupdates.model.SummaryUpdate;
 import com.awardtravelupdates.repository.PostSummaryCacheRepository;
-import com.awardtravelupdates.service.GroqAccessor;
+import com.awardtravelupdates.accessor.GroqAccessor;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
