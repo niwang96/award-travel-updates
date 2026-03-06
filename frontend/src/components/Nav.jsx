@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom'
 
+const navLinkClass = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`
+
 export default function Nav() {
   return (
     <nav className="nav">
-      <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Home</NavLink>
-      <NavLink to="/deals" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Flight Deals</NavLink>
-      <NavLink to="/news" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Recent News</NavLink>
+      <NavLink to="/" end className={navLinkClass}>Home</NavLink>
+      <NavLink to="/deals" className={navLinkClass}>Flight Deals</NavLink>
+      <NavLink to="/news" className={navLinkClass}>Recent News</NavLink>
     </nav>
   )
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { API } from '../api'
 
 const SECTIONS = [
-  { key: 'doctorofcredit', label: 'Doctor of Credit', type: 'blog' },
-  { key: 'frequentmiler', label: 'Frequent Miler', type: 'blog' },
-  { key: 'awardtravel', label: 'r/awardtravel', type: 'subreddit' },
-  { key: 'churning', label: 'r/churning', type: 'subreddit' },
+  { key: 'doctorofcredit', label: 'Doctor of Credit' },
+  { key: 'frequentmiler', label: 'Frequent Miler' },
+  { key: 'awardtravel', label: 'r/awardtravel' },
+  { key: 'churning', label: 'r/churning' },
 ]
 
 export default function RecentNews() {
@@ -13,30 +14,37 @@ export default function RecentNews() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
+
     async function fetchAll() {
       try {
         const [blogRes, subRes] = await Promise.all([
-          fetch('/api/blog-summaries'),
-          fetch('/api/subreddit-summaries'),
+          fetch(API.blogSummaries, { signal }),
+          fetch(API.subredditSummaries, { signal }),
         ])
         if (!blogRes.ok) throw new Error(`Blog summaries: HTTP ${blogRes.status}`)
         if (!subRes.ok) throw new Error(`Subreddit summaries: HTTP ${subRes.status}`)
         const [blog, sub] = await Promise.all([blogRes.json(), subRes.json()])
         setData({ ...blog, ...sub })
-      } catch (e) {
-        setError(e.message || 'Failed to load news.')
-      } finally {
         setLoading(false)
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          setError(e.message || 'Failed to load news.')
+          setLoading(false)
+        }
       }
     }
+
     fetchAll()
+    return () => controller.abort()
   }, [])
 
   if (loading) return <p className="empty">Loading news…</p>
   if (error) return <p className="error">{error}</p>
 
   return (
-    <div className="container">
+    <>
       {SECTIONS.map(({ key, label }) => {
         const section = data[key]
         if (!section) return null
@@ -46,10 +54,10 @@ export default function RecentNews() {
               {label}
               {section.stale && <span className="stale-badge">stale</span>}
             </h2>
-            {section.updates && section.updates.length > 0
-              ? <ul className="deals-list">
+            {section.updates?.length > 0
+              ? <ul className="item-list">
                   {section.updates.map((update, i) => (
-                    <li key={i} className="deal-item">
+                    <li key={i} className="item">
                       {update.source
                         ? <a href={update.source} target="_blank" rel="noopener noreferrer">{update.text}</a>
                         : update.text}
@@ -61,6 +69,6 @@ export default function RecentNews() {
           </div>
         )
       })}
-    </div>
+    </>
   )
 }

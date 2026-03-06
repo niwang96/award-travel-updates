@@ -8,7 +8,11 @@
   flex: 1;
   overflow-y: auto;
   padding: 2rem;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
   text-align: center;
+  box-sizing: border-box;
 }
 
 /* Nav */
@@ -59,6 +63,32 @@
   flex-wrap: wrap;
 }
 
+/* Buttons & CTA links */
+.cta-button {
+  display: inline-block;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  background: #646cff;
+  color: #fff;
+  text-decoration: none;
+  transition: background 200ms;
+}
+
+.cta-button:hover:not(:disabled) {
+  background: #535bf2;
+  color: #fff;
+}
+
+.cta-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .cta-button.secondary {
   background: #2a2a2a;
   color: #a5b4fc;
@@ -66,6 +96,34 @@
 
 .cta-button.secondary:hover:not(:disabled) {
   background: #333;
+  color: #a5b4fc;
+}
+
+/* Shared item list */
+.item-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 2rem;
+  text-align: left;
+}
+
+.item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #2a2a2a;
+  line-height: 1.5;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item a {
+  color: #a5b4fc;
+  text-decoration: none;
+}
+
+.item a:hover {
+  text-decoration: underline;
 }
 
 /* News */
@@ -93,29 +151,7 @@
   letter-spacing: 0.05em;
 }
 
-.cta-button {
-  display: inline-block;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  border: none;
-  border-radius: 6px;
-  background: #646cff;
-  color: #fff;
-  transition: background 200ms;
-}
-
-.cta-button:hover:not(:disabled) {
-  background: #535bf2;
-}
-
-.cta-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
+/* States */
 .error {
   color: #e44;
   margin-top: 1.5rem;
@@ -124,30 +160,4 @@
 .empty {
   color: #888;
   margin-top: 1.5rem;
-}
-
-.deals-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 2rem;
-  text-align: left;
-}
-
-.deal-item {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #2a2a2a;
-  line-height: 1.5;
-}
-
-.deal-item:last-child {
-  border-bottom: none;
-}
-
-.deal-item a {
-  color: #a5b4fc;
-  text-decoration: none;
-}
-
-.deal-item a:hover {
-  text-decoration: underline;
 }
