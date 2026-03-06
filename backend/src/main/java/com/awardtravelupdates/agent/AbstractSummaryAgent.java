@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,22 +32,25 @@ public abstract class AbstractSummaryAgent {
         this.postSummaryCacheRepository = postSummaryCacheRepository;
     }
 
+    private static final int POST_CACHE_TTL_HOURS = 3;
+
     protected record CachePartition<P>(List<SummaryUpdate> cachedUpdates, List<P> uncachedPosts) {}
 
     /**
-     * Splits posts into cached (with their deserialized updates) and uncached (not yet seen by the LLM)
-     * using a single batch DB query.
+     * Splits posts into cached (with their deserialized updates) and uncached (not yet seen by the LLM).
+     * Cache entries older than POST_CACHE_TTL_HOURS are treated as uncached and re-evaluated.
      */
     protected <P> CachePartition<P> partitionByCache(List<P> posts, Function<P, String> urlExtractor) {
         List<String> urls = posts.stream().map(urlExtractor).toList();
         Map<String, PostSummaryCache> cacheByUrl = postSummaryCacheRepository.findAllById(urls)
                 .stream().collect(Collectors.toMap(PostSummaryCache::getUrl, c -> c));
 
+        Instant ttlCutoff = Instant.now().minus(POST_CACHE_TTL_HOURS, ChronoUnit.HOURS);
         List<SummaryUpdate> cachedUpdates = new ArrayList<>();
         List<P> uncachedPosts = new ArrayList<>();
         for (P post : posts) {
             PostSummaryCache entry = cacheByUrl.get(urlExtractor.apply(post));
-            if (entry != null) {
+            if (entry != null && entry.getProcessedAt().isAfter(ttlCutoff)) {
                 cachedUpdates.addAll(deserializeUpdates(entry.getSummaryText()));
             } else {
                 uncachedPosts.add(post);

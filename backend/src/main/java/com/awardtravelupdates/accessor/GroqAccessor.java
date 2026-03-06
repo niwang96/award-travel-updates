@@ -52,28 +52,36 @@ public class GroqAccessor {
     private String extractContent(JsonNode response) {
         JsonNode choices = response.path("choices");
         if (!choices.isArray() || choices.isEmpty()) {
-            log.error("Unexpected Groq response structure — missing choices: {}", response);
-            return "[]";
+            throw new IllegalStateException("Unexpected Groq response structure — missing choices: " + response);
         }
         return choices.get(0).path("message").path("content").asText();
     }
 
     private JsonNode parseJson(String text) {
-        String stripped = stripMarkdownFences(text);
+        String stripped = extractJsonFragment(text);
         try {
             return objectMapper.readTree(stripped);
         } catch (Exception e) {
-            log.error("Failed to parse Groq response as JSON: {}", stripped);
-            return objectMapper.createArrayNode();
+            throw new IllegalStateException("Failed to parse Groq response as JSON: " + stripped, e);
         }
     }
 
-    private String stripMarkdownFences(String text) {
+    private String extractJsonFragment(String text) {
         String stripped = text.trim();
+        // Strip markdown code fences
         if (stripped.startsWith("```")) {
             int firstNewline = stripped.indexOf('\n');
             if (firstNewline != -1) stripped = stripped.substring(firstNewline + 1);
             if (stripped.endsWith("```")) stripped = stripped.substring(0, stripped.lastIndexOf("```")).trim();
+        }
+        // Skip any prose preamble before the JSON starts
+        int arrayStart = stripped.indexOf('[');
+        int objectStart = stripped.indexOf('{');
+        int jsonStart = (arrayStart == -1) ? objectStart
+                : (objectStart == -1) ? arrayStart
+                : Math.min(arrayStart, objectStart);
+        if (jsonStart > 0) {
+            stripped = stripped.substring(jsonStart);
         }
         return stripped;
     }
@@ -96,8 +104,12 @@ public class GroqAccessor {
                     break;
                 }
             } catch (Exception e) {
-                log.error("Groq call failed: {}", e.getMessage());
-                break;
+                if (attempt < MAX_RETRIES) {
+                    log.warn("Groq call failed (attempt {}/{}), retrying: {}", attempt + 1, MAX_RETRIES, e.getMessage());
+                } else {
+                    log.error("Groq call failed after {} attempts: {}", MAX_RETRIES + 1, e.getMessage());
+                    break;
+                }
             }
         }
         return fallback;

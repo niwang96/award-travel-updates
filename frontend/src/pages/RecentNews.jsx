@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { API } from '../api'
-import { deduplicateData } from '../utils/deduplication'
 
 const SECTIONS = [
   { key: 'doctorofcredit', label: 'Doctor of Credit' },
@@ -20,15 +19,9 @@ export default function RecentNews() {
 
     async function fetchAll() {
       try {
-        const [blogRes, subRes] = await Promise.all([
-          fetch(API.blogSummaries, { signal }),
-          fetch(API.subredditSummaries, { signal }),
-        ])
-        if (!blogRes.ok) throw new Error(`Blog summaries: HTTP ${blogRes.status}`)
-        if (!subRes.ok) throw new Error(`Subreddit summaries: HTTP ${subRes.status}`)
-        const [blog, sub] = await Promise.all([blogRes.json(), subRes.json()])
-        const merged = { ...blog, ...sub }
-        setData(deduplicateData(merged))
+        const res = await fetch(API.combinedSummaries, { signal })
+        if (!res.ok) throw new Error(`Combined summaries: HTTP ${res.status}`)
+        setData(await res.json())
         setLoading(false)
       } catch (e) {
         if (e.name !== 'AbortError') {
