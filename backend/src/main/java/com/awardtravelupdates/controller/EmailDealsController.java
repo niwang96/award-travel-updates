@@ -1,6 +1,6 @@
 package com.awardtravelupdates.controller;
 
-import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.model.FlightDeal;
 import com.awardtravelupdates.service.EmailDealsSummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +17,7 @@ public class EmailDealsController {
     private final EmailDealsSummaryService emailDealsSummaryService;
 
     @GetMapping("/email-deals")
-    public List<SummaryUpdate> getEmailDeals() {
+    public List<FlightDeal> getEmailDeals() {
         return emailDealsSummaryService.getDeals();
     }
 }

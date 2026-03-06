@@ -1,6 +1,6 @@
 package com.awardtravelupdates.model;
 
-import com.awardtravelupdates.config.SummaryUpdateListConverter;
+import com.awardtravelupdates.converter.SummaryUpdateListConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.MappedSuperclass;

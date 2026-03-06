@@ -1,7 +1,7 @@
 package com.awardtravelupdates.accessor;
 
 import com.awardtravelupdates.config.GoogleProperties;
-import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.model.FlightDeal;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,11 +63,11 @@ public class GmailAccessor {
     private volatile String cachedAccessToken;
     private volatile Instant tokenExpiry = Instant.MIN;
 
-    public List<SummaryUpdate> fetchRecentDeals() {
+    public List<FlightDeal> fetchRecentDeals() {
         try {
             String accessToken = getAccessToken();
             List<String> messageIds = searchMessages(accessToken);
-            List<SummaryUpdate> results = new ArrayList<>();
+            List<FlightDeal> results = new ArrayList<>();
             for (String id : messageIds) {
                 results.addAll(fetchDealsFromMessage(accessToken, id));
             }
@@ -120,7 +120,7 @@ public class GmailAccessor {
         return ids;
     }
 
-    private List<SummaryUpdate> fetchDealsFromMessage(String accessToken, String messageId) {
+    private List<FlightDeal> fetchDealsFromMessage(String accessToken, String messageId) {
         try {
             JsonNode message = gmailApiClient.get()
                     .uri("/gmail/v1/users/me/messages/{id}?format=full", messageId)
@@ -175,7 +175,7 @@ public class GmailAccessor {
         return "";
     }
 
-    private List<SummaryUpdate> parseDeals(String body, String subject, long receivedAt) {
+    private List<FlightDeal> parseDeals(String body, String subject, long receivedAt) {
         // Extract link map from the "Links:" footer before removing [N] markers
         Map<String, String> linkMap = new HashMap<>();
         Matcher linkMatcher = LINK_MAP_PATTERN.matcher(body);
@@ -190,7 +190,7 @@ public class GmailAccessor {
                 .replaceAll("\r\n", "\n")
                 .replaceAll("(\\d{1,3}),(\\d{3})\\d+\\s+PTS", "$1,$2 PTS");
 
-        List<SummaryUpdate> deals = new ArrayList<>();
+        List<FlightDeal> deals = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         Matcher startMatcher = DEAL_BLOCK_PATTERN.matcher(originalNormalized);
 
@@ -227,7 +227,6 @@ public class GmailAccessor {
             try {
                 int points = Integer.parseInt(fieldsMatcher.group(1).replace(",", ""));
                 String airlineAndCabin = fieldsMatcher.group(2).trim();
-                String via = fieldsMatcher.group(5) != null ? fieldsMatcher.group(5).trim() : null;
                 String flightDate = fieldsMatcher.group(6).trim();
                 String redemptionProgram = fieldsMatcher.group(7).trim();
 
@@ -242,10 +241,7 @@ public class GmailAccessor {
                     continue;
                 }
 
-                String viaClause = (via != null && !via.isBlank()) ? " (via " + via + ")" : "";
-                String text = String.format("%,d pts %s %s from %s to %s%s on %s booked through %s",
-                        points, airline, cabin, origin, destination, viaClause, flightDate, redemptionProgram);
-                deals.add(new SummaryUpdate(text, dealUrl, receivedAt));
+                deals.add(new FlightDeal(points, airline, cabin, origin, destination, flightDate, redemptionProgram, dealUrl, receivedAt));
             } catch (Exception e) {
                 log.warn("Failed to parse deal fields from block: {}", block);
             }

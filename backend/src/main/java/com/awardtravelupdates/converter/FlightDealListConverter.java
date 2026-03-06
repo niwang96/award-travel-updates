@@ -1,6 +1,6 @@
-package com.awardtravelupdates.config;
+package com.awardtravelupdates.converter;
 
-import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.model.FlightDeal;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
@@ -9,21 +9,21 @@ import jakarta.persistence.Converter;
 import java.util.List;
 
 @Converter
-public class SummaryUpdateListConverter implements AttributeConverter<List<SummaryUpdate>, String> {
+public class FlightDealListConverter implements AttributeConverter<List<FlightDeal>, String> {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String convertToDatabaseColumn(List<SummaryUpdate> updates) {
+    public String convertToDatabaseColumn(List<FlightDeal> deals) {
         try {
-            return objectMapper.writeValueAsString(updates);
+            return objectMapper.writeValueAsString(deals);
         } catch (Exception e) {
             return "[]";
         }
     }
 
     @Override
-    public List<SummaryUpdate> convertToEntityAttribute(String json) {
+    public List<FlightDeal> convertToEntityAttribute(String json) {
         try {
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (Exception e) {

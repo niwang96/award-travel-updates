@@ -3,7 +3,7 @@ package com.awardtravelupdates.service;
 import com.awardtravelupdates.accessor.GmailAccessor;
 import com.awardtravelupdates.constants.BlogConstants;
 import com.awardtravelupdates.model.EmailDealsSummary;
-import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.model.FlightDeal;
 import com.awardtravelupdates.repository.EmailDealsSummaryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,22 +24,22 @@ public class EmailDealsSummaryService {
     private final GmailAccessor gmailAccessor;
     private final EmailDealsSummaryRepository emailDealsSummaryRepository;
 
-    public List<SummaryUpdate> getDeals() {
+    public List<FlightDeal> getDeals() {
         Optional<EmailDealsSummary> cached = emailDealsSummaryRepository.findById(EMAIL_DEALS_ID);
 
         if (cached.isPresent() && !isStale(cached.get())) {
             log.info("Returning cached email deals");
-            return cached.get().getUpdates();
+            return cached.get().getDeals();
         }
 
         try {
             log.info("Fetching fresh email deals from Gmail");
-            List<SummaryUpdate> updates = gmailAccessor.fetchRecentDeals();
-            emailDealsSummaryRepository.save(new EmailDealsSummary(EMAIL_DEALS_ID, updates, Instant.now()));
-            return updates;
+            List<FlightDeal> deals = gmailAccessor.fetchRecentDeals();
+            emailDealsSummaryRepository.save(new EmailDealsSummary(EMAIL_DEALS_ID, deals, Instant.now()));
+            return deals;
         } catch (Exception e) {
             log.error("Failed to fetch email deals from Gmail", e);
-            return cached.map(EmailDealsSummary::getUpdates).orElse(List.of());
+            return cached.map(EmailDealsSummary::getDeals).orElse(List.of());
         }
     }
 
