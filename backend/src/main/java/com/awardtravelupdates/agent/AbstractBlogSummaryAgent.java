@@ -2,10 +2,12 @@ package com.awardtravelupdates.agent;
 
 import com.awardtravelupdates.model.BlogPost;
 import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.repository.PostSummaryCacheRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -30,8 +32,9 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 2}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"postIndex\": 5}]";
 
-    public AbstractBlogSummaryAgent(RestClient groqClient, ObjectMapper objectMapper) {
-        super(groqClient, objectMapper);
+    public AbstractBlogSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+                                    PostSummaryCacheRepository postSummaryCacheRepository) {
+        super(groqClient, objectMapper, postSummaryCacheRepository);
     }
 
     public abstract String getBlogId();
@@ -43,17 +46,27 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             return fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.");
         }
 
+        CachePartition<BlogPost> partition = partitionByCache(posts, BlogPost::url);
+        List<SummaryUpdate> allUpdates = new ArrayList<>(partition.cachedUpdates());
+
+        if (!partition.uncachedPosts().isEmpty()) {
+            List<SummaryUpdate> newUpdates = callLlm(partition.uncachedPosts());
+            saveUpdatesBySourceUrl(partition.uncachedPosts(), BlogPost::url, newUpdates);
+            allUpdates.addAll(newUpdates);
+        }
+
+        return allUpdates.isEmpty()
+                ? fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.")
+                : allUpdates;
+    }
+
+    private List<SummaryUpdate> callLlm(List<BlogPost> posts) {
         String numberedPosts = IntStream.range(0, posts.size())
                 .mapToObj(i -> "[" + (i + 1) + "] " + posts.get(i).title() + "\n" + posts.get(i).content())
                 .collect(Collectors.joining("\n\n"));
-
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key news and updates from these blog posts:\n\n" + numberedPosts);
-
-        List<SummaryUpdate> updates = parseUpdates(json, posts,
+        return parseUpdates(json, posts,
                 (text, post) -> new SummaryUpdate(text, post.url(), post.publishedUtc()));
-        return updates.isEmpty()
-                ? fallbackOutput("No recent updates from " + getDisplayName() + " — check back soon.")
-                : updates;
     }
 }

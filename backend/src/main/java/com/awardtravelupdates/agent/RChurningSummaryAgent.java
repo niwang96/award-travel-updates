@@ -4,6 +4,7 @@ import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditComment;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.repository.PostSummaryCacheRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,9 @@ import org.springframework.web.client.RestClient;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,8 +40,9 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
             "and \"commentIndex\" (1-based index of the comment within that post, or 0 if from the post title). " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 1, \"commentIndex\": 3}]";
 
-    public RChurningSummaryAgent(RestClient groqClient, ObjectMapper objectMapper) {
-        super(groqClient, objectMapper);
+    public RChurningSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+                                 PostSummaryCacheRepository postSummaryCacheRepository) {
+        super(groqClient, objectMapper, postSummaryCacheRepository);
     }
 
     @Override
@@ -48,66 +52,92 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
 
     @Override
     public List<SummaryUpdate> summarize(List<RedditPost> posts) {
-        Instant cutoff = Instant.now().minus(POSTS_DAYS_LIMIT, ChronoUnit.DAYS);
-        List<RedditPost> filtered = posts.stream()
-                .filter(p -> Instant.ofEpochSecond(p.createdUtc()).isAfter(cutoff))
-                .filter(p -> p.title().toLowerCase().contains(RedditConstants.CHURNING_COMMENT_TITLE_FILTER))
-                .toList();
-
-        if (filtered.isEmpty()) {
+        List<RedditPost> recentNewsThreads = filterToRecentNewsThreads(posts);
+        if (recentNewsThreads.isEmpty()) {
             return fallbackOutput("No news and updates posts found.");
         }
 
-        String numberedPosts = IntStream.range(0, filtered.size())
+        CachePartition<RedditPost> partition = partitionByCache(recentNewsThreads, RedditPost::permalink);
+        List<SummaryUpdate> allUpdates = new ArrayList<>(partition.cachedUpdates());
+
+        if (!partition.uncachedPosts().isEmpty()) {
+            allUpdates.addAll(callLlmAndSave(partition.uncachedPosts()));
+        }
+
+        return allUpdates;
+    }
+
+    private List<RedditPost> filterToRecentNewsThreads(List<RedditPost> posts) {
+        Instant cutoff = Instant.now().minus(POSTS_DAYS_LIMIT, ChronoUnit.DAYS);
+        return posts.stream()
+                .filter(p -> Instant.ofEpochSecond(p.createdUtc()).isAfter(cutoff))
+                .filter(p -> p.title().toLowerCase().contains(RedditConstants.CHURNING_COMMENT_TITLE_FILTER))
+                .toList();
+    }
+
+    // Churning threads can produce multiple updates (one per comment), so cache is saved per-thread
+    // by postIndex rather than by SummaryUpdate.source() (which is the comment permalink, not thread URL).
+    private List<SummaryUpdate> callLlmAndSave(List<RedditPost> uncachedThreads) {
+        JsonNode json = callApiJson(SYSTEM_PROMPT,
+                "Summarize the key deals and updates from these churning posts and their comments:\n\n"
+                + formatThreadsWithComments(uncachedThreads));
+
+        Map<Integer, List<SummaryUpdate>> updatesByThreadIndex = parseUpdatesByThreadIndex(json, uncachedThreads);
+
+        List<SummaryUpdate> newUpdates = new ArrayList<>();
+        for (int i = 0; i < uncachedThreads.size(); i++) {
+            List<SummaryUpdate> threadUpdates = updatesByThreadIndex.getOrDefault(i + 1, List.of());
+            savePostCache(uncachedThreads.get(i).permalink(), threadUpdates);
+            newUpdates.addAll(threadUpdates);
+        }
+        return newUpdates;
+    }
+
+    private String formatThreadsWithComments(List<RedditPost> threads) {
+        return IntStream.range(0, threads.size())
                 .mapToObj(i -> {
-                    RedditPost post = filtered.get(i);
-                    String numberedComments = IntStream.range(0, post.comments().size())
-                            .mapToObj(j -> "  [" + (j + 1) + "] " + post.comments().get(j).body())
+                    RedditPost thread = threads.get(i);
+                    String numberedComments = IntStream.range(0, thread.comments().size())
+                            .mapToObj(j -> "  [" + (j + 1) + "] " + thread.comments().get(j).body())
                             .collect(Collectors.joining("\n"));
-                    return "Post " + (i + 1) + ": " + post.title() + "\n" + numberedComments;
+                    return "Post " + (i + 1) + ": " + thread.title() + "\n" + numberedComments;
                 })
                 .collect(Collectors.joining("\n\n"));
-
-        JsonNode json = callApiJson(SYSTEM_PROMPT,
-                "Summarize the key deals and updates from these churning posts and their comments:\n\n" + numberedPosts);
-
-        return parseUpdates(json, filtered);
     }
 
-    private List<SummaryUpdate> parseUpdates(JsonNode json, List<RedditPost> posts) {
-        List<SummaryUpdate> updates = new ArrayList<>();
+    private Map<Integer, List<SummaryUpdate>> parseUpdatesByThreadIndex(JsonNode json, List<RedditPost> threads) {
+        Map<Integer, List<SummaryUpdate>> updatesByThreadIndex = new HashMap<>();
         for (JsonNode item : json) {
-            String text = item.path("text").asText();
-            int postIndex = item.path("postIndex").asInt(0);
+            int threadIndex = item.path("postIndex").asInt(0);
             int commentIndex = item.path("commentIndex").asInt(0);
-
-            if (postIndex >= 1 && postIndex <= posts.size()) {
-                RedditPost post = posts.get(postIndex - 1);
-                String source = resolveSource(commentIndex, post);
-                long timestamp = resolveTimestamp(commentIndex, post);
-                updates.add(new SummaryUpdate(text, source, timestamp));
+            if (threadIndex >= 1 && threadIndex <= threads.size()) {
+                RedditPost thread = threads.get(threadIndex - 1);
+                updatesByThreadIndex.computeIfAbsent(threadIndex, k -> new ArrayList<>())
+                        .add(new SummaryUpdate(item.path("text").asText(),
+                                resolveSource(commentIndex, thread),
+                                resolveTimestamp(commentIndex, thread)));
             }
         }
-        return updates;
+        return updatesByThreadIndex;
     }
 
-    private Optional<RedditComment> resolveComment(int commentIndex, RedditPost post) {
-        List<RedditComment> comments = post.comments();
+    private Optional<RedditComment> findComment(int commentIndex, RedditPost thread) {
+        List<RedditComment> comments = thread.comments();
         if (commentIndex > 0 && commentIndex <= comments.size()) {
             return Optional.of(comments.get(commentIndex - 1));
         }
         return Optional.empty();
     }
 
-    private String resolveSource(int commentIndex, RedditPost post) {
-        return resolveComment(commentIndex, post)
+    private String resolveSource(int commentIndex, RedditPost thread) {
+        return findComment(commentIndex, thread)
                 .map(RedditComment::permalink)
-                .orElse(post.permalink());
+                .orElse(thread.permalink());
     }
 
-    private long resolveTimestamp(int commentIndex, RedditPost post) {
-        return resolveComment(commentIndex, post)
+    private long resolveTimestamp(int commentIndex, RedditPost thread) {
+        return findComment(commentIndex, thread)
                 .map(RedditComment::createdUtc)
-                .orElse(post.createdUtc());
+                .orElse(thread.createdUtc());
     }
 }

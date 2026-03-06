@@ -22,6 +22,4 @@ public abstract class AbstractCachedSummary {
     private List<SummaryUpdate> updates;
 
     private Instant lastUpdated;
-
-    private int postCount;
 }

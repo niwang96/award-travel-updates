@@ -28,6 +28,9 @@ dist/
 # ── Secrets ──────────────────────────────────────────────────
 backend/src/main/resources/application.properties
 
+# ── H2 database files ────────────────────────────────────────
+backend/data/
+
 # ── Logs ─────────────────────────────────────────────────────
 *.log
 logs/

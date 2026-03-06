@@ -3,11 +3,13 @@ package com.awardtravelupdates.agent;
 import com.awardtravelupdates.constants.RedditConstants;
 import com.awardtravelupdates.model.RedditPost;
 import com.awardtravelupdates.model.SummaryUpdate;
+import com.awardtravelupdates.repository.PostSummaryCacheRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -26,12 +28,14 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
             "Example: [{\"text\": \"United raised Saver awards on transatlantic routes by 20%\", \"postIndex\": 2}]";
 
-    public RAwardTravelSummaryAgent(RestClient groqClient, ObjectMapper objectMapper) {
-        super(groqClient, objectMapper);
-    }
+    private static final String FALLBACK_MESSAGE =
+            "No major award chart updates or program changes right now — check back soon.";
 
-    private static String truncate(String text, int maxChars) {
-        return text.length() <= maxChars ? text : text.substring(0, maxChars) + "…";
+    private static final int SELFTEXT_MAX_CHARS = 500;
+
+    public RAwardTravelSummaryAgent(RestClient groqClient, ObjectMapper objectMapper,
+                                    PostSummaryCacheRepository postSummaryCacheRepository) {
+        super(groqClient, objectMapper, postSummaryCacheRepository);
     }
 
     @Override
@@ -42,25 +46,37 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
     @Override
     public List<SummaryUpdate> summarize(List<RedditPost> posts) {
         if (posts.isEmpty()) {
-            return fallbackOutput("No major award chart updates or program changes right now — check back soon.");
+            return fallbackOutput(FALLBACK_MESSAGE);
         }
 
-        String numberedPosts = IntStream.range(0, posts.size())
-                .mapToObj(i -> {
-                    RedditPost post = posts.get(i);
-                    String selftext = post.selftext().isBlank() ? "" : "\n" + truncate(post.selftext(), 500);
-                    String text = "[" + post.upvotes() + " upvotes] " + post.title() + selftext;
-                    return "[" + (i + 1) + "] " + text;
-                })
-                .collect(Collectors.joining("\n\n"));
+        CachePartition<RedditPost> partition = partitionByCache(posts, RedditPost::permalink);
+        List<SummaryUpdate> allUpdates = new ArrayList<>(partition.cachedUpdates());
 
+        if (!partition.uncachedPosts().isEmpty()) {
+            List<SummaryUpdate> newUpdates = callLlm(partition.uncachedPosts());
+            saveUpdatesBySourceUrl(partition.uncachedPosts(), RedditPost::permalink, newUpdates);
+            allUpdates.addAll(newUpdates);
+        }
+
+        return allUpdates.isEmpty() ? fallbackOutput(FALLBACK_MESSAGE) : allUpdates;
+    }
+
+    private List<SummaryUpdate> callLlm(List<RedditPost> posts) {
+        String numberedPosts = IntStream.range(0, posts.size())
+                .mapToObj(i -> formatPost(i + 1, posts.get(i)))
+                .collect(Collectors.joining("\n\n"));
         JsonNode json = callApiJson(SYSTEM_PROMPT,
                 "Summarize the key news and updates from these awardtravel posts:\n\n" + numberedPosts);
-
-        List<SummaryUpdate> updates = parseUpdates(json, posts,
+        return parseUpdates(json, posts,
                 (text, post) -> new SummaryUpdate(text, post.permalink(), post.createdUtc()));
-        return updates.isEmpty()
-                ? fallbackOutput("No major award chart updates or program changes right now — check back soon.")
-                : updates;
+    }
+
+    private String formatPost(int index, RedditPost post) {
+        String selftext = post.selftext().isBlank() ? "" : "\n" + truncate(post.selftext(), SELFTEXT_MAX_CHARS);
+        return "[" + index + "] [" + post.upvotes() + " upvotes] " + post.title() + selftext;
+    }
+
+    private static String truncate(String text, int maxChars) {
+        return text.length() <= maxChars ? text : text.substring(0, maxChars) + "…";
     }
 }

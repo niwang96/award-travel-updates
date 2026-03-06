@@ -59,15 +59,13 @@ public class SubredditSummaryService extends AbstractCachingSummaryService<Reddi
     }
 
     @Override
-    protected void saveToCache(String id, List<SummaryUpdate> updates, int count) {
-        subredditSummaryRepository.save(new SubredditSummary(id, updates, Instant.now(), count));
+    protected void saveToCache(String id, List<SummaryUpdate> updates) {
+        subredditSummaryRepository.save(new SubredditSummary(id, updates, Instant.now()));
     }
 
     @Override
-    protected boolean isStale(SubredditSummary cached, int currentCount) {
-        boolean tooOld = cached.getLastUpdated().isBefore(Instant.now().minus(RedditConstants.STALE_HOURS, ChronoUnit.HOURS));
-        boolean tooManyNewPosts = (currentCount - cached.getPostCount()) >= RedditConstants.NEW_POSTS_THRESHOLD;
-        return tooOld || tooManyNewPosts;
+    protected boolean isStale(SubredditSummary cached) {
+        return cached.getLastUpdated().isBefore(Instant.now().minus(RedditConstants.STALE_HOURS, ChronoUnit.HOURS));
     }
 
     @Override

@@ -16,8 +16,8 @@ public class BlogSummary extends AbstractCachedSummary {
     @Id
     private String blogId;
 
-    public BlogSummary(String blogId, List<SummaryUpdate> updates, Instant lastUpdated, int postCount) {
-        super(updates, lastUpdated, postCount);
+    public BlogSummary(String blogId, List<SummaryUpdate> updates, Instant lastUpdated) {
+        super(updates, lastUpdated);
         this.blogId = blogId;
     }
 }

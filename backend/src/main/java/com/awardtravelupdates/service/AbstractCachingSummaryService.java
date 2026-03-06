@@ -41,8 +41,7 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
 
     private SummaryResult computeSummary(String id, List<POST> posts) {
         Optional<CACHED> cached = findCached(id);
-        int currentCount = posts.size();
-        boolean needsRefresh = cached.isEmpty() || isStale(cached.get(), currentCount);
+        boolean needsRefresh = cached.isEmpty() || isStale(cached.get());
 
         if (!needsRefresh) {
             return new SummaryResult(cached.get().getUpdates(), false);
@@ -50,7 +49,7 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
 
         try {
             List<SummaryUpdate> updates = summarize(id, posts);
-            saveToCache(id, updates, currentCount);
+            saveToCache(id, updates);
             return new SummaryResult(updates, false);
         } catch (Exception e) {
             return buildFallbackResult(cached);
@@ -75,9 +74,9 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
 
     protected abstract Optional<CACHED> findCached(String id);
 
-    protected abstract void saveToCache(String id, List<SummaryUpdate> updates, int count);
+    protected abstract void saveToCache(String id, List<SummaryUpdate> updates);
 
-    protected abstract boolean isStale(CACHED cached, int currentCount);
+    protected abstract boolean isStale(CACHED cached);
 
     protected abstract SummaryResult unknownIdResult(String id);
 }

@@ -17,5 +17,4 @@ public final class BlogConstants {
     public static final int BLOG_POSTS_DAYS_LIMIT = 3;
     public static final int BLOG_MAX_CONTENT_CHARS = 500;
     public static final int BLOG_STALE_HOURS = 3;
-    public static final int BLOG_NEW_POSTS_THRESHOLD = 3;
 }

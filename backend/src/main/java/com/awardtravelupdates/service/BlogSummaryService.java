@@ -59,15 +59,13 @@ public class BlogSummaryService extends AbstractCachingSummaryService<BlogPost, 
     }
 
     @Override
-    protected void saveToCache(String id, List<SummaryUpdate> updates, int count) {
-        blogSummaryRepository.save(new BlogSummary(id, updates, Instant.now(), count));
+    protected void saveToCache(String id, List<SummaryUpdate> updates) {
+        blogSummaryRepository.save(new BlogSummary(id, updates, Instant.now()));
     }
 
     @Override
-    protected boolean isStale(BlogSummary cached, int currentCount) {
-        boolean tooOld = cached.getLastUpdated().isBefore(Instant.now().minus(BlogConstants.BLOG_STALE_HOURS, ChronoUnit.HOURS));
-        boolean tooManyNewPosts = (currentCount - cached.getPostCount()) >= BlogConstants.BLOG_NEW_POSTS_THRESHOLD;
-        return tooOld || tooManyNewPosts;
+    protected boolean isStale(BlogSummary cached) {
+        return cached.getLastUpdated().isBefore(Instant.now().minus(BlogConstants.BLOG_STALE_HOURS, ChronoUnit.HOURS));
     }
 
     @Override

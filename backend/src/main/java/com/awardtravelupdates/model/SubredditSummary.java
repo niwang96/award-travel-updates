@@ -16,8 +16,8 @@ public class SubredditSummary extends AbstractCachedSummary {
     @Id
     private String subreddit;
 
-    public SubredditSummary(String subreddit, List<SummaryUpdate> updates, Instant lastUpdated, int postCount) {
-        super(updates, lastUpdated, postCount);
+    public SubredditSummary(String subreddit, List<SummaryUpdate> updates, Instant lastUpdated) {
+        super(updates, lastUpdated);
         this.subreddit = subreddit;
     }
 }

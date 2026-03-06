@@ -32,7 +32,6 @@ public final class RedditConstants {
     public static final String FIELD_PERMALINK = "permalink";
 
     public static final int STALE_HOURS = 3;
-    public static final int NEW_POSTS_THRESHOLD = 5;
 
     public static final int DEFAULT_LIMIT = 25;
     public static final int TOP_COMMENTS_LIMIT = 10;
