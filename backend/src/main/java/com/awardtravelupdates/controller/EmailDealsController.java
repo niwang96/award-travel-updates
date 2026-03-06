@@ -1,7 +1,7 @@
 package com.awardtravelupdates.controller;
 
 import com.awardtravelupdates.model.SummaryUpdate;
-import com.awardtravelupdates.accessor.GmailAccessor;
+import com.awardtravelupdates.service.EmailDealsSummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,10 +14,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmailDealsController {
 
-    private final GmailAccessor gmailAccessor;
+    private final EmailDealsSummaryService emailDealsSummaryService;
 
     @GetMapping("/email-deals")
     public List<SummaryUpdate> getEmailDeals() {
-        return gmailAccessor.fetchRecentDeals();
+        return emailDealsSummaryService.getDeals();
     }
 }
