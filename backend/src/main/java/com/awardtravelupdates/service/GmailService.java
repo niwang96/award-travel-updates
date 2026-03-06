@@ -227,6 +227,7 @@ public class GmailService {
             try {
                 int points = Integer.parseInt(fieldsMatcher.group(1).replace(",", ""));
                 String airlineAndCabin = fieldsMatcher.group(2).trim();
+                String via = fieldsMatcher.group(5) != null ? fieldsMatcher.group(5).trim() : null;
                 String flightDate = fieldsMatcher.group(6).trim();
                 String redemptionProgram = fieldsMatcher.group(7).trim();
 
@@ -241,8 +242,9 @@ public class GmailService {
                     continue;
                 }
 
-                String text = String.format("%,d points for %s on %s for %s booked through %s",
-                        points, cabin, airline, flightDate, redemptionProgram);
+                String viaClause = (via != null && !via.isBlank()) ? " (via " + via + ")" : "";
+                String text = String.format("%,d pts %s %s from %s to %s%s on %s booked through %s",
+                        points, airline, cabin, origin, destination, viaClause, flightDate, redemptionProgram);
                 deals.add(new SummaryUpdate(text, dealUrl, receivedAt));
             } catch (Exception e) {
                 log.warn("Failed to parse deal fields from block: {}", block);
