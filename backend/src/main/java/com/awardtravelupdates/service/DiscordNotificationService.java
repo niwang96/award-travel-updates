@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -84,7 +86,10 @@ public class DiscordNotificationService {
         Map<String, SummaryResult> data = combinedSummaryService.getSummaries();
         List<String> messages = formatMessages(data);
 
-        List<FlightDeal> deals = emailDealsSummaryService.getDeals();
+        long oneDayAgoMillis = Instant.now().minus(1, ChronoUnit.DAYS).toEpochMilli();
+        List<FlightDeal> deals = emailDealsSummaryService.getDeals().stream()
+                .filter(d -> d.dateFound() >= oneDayAgoMillis)
+                .toList();
         messages.addAll(formatDealsMessages(deals));
 
         log.info("Sending {} Discord message(s)", messages.size());

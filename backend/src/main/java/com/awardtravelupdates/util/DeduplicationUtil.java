@@ -10,12 +10,16 @@ public final class DeduplicationUtil {
     private DeduplicationUtil() {}
 
     private static final Set<String> STOP_WORDS = Set.of(
+            // Common English stop words
             "the", "a", "an", "is", "in", "on", "to", "and", "or", "of",
             "for", "with", "from", "by", "at", "it", "its", "that", "this",
-            "as", "are", "was", "be", "has", "have", "had", "will", "which"
+            "as", "are", "was", "be", "has", "have", "had", "will", "which",
+            // Domain-specific: ubiquitous in every deal/card entry, not useful for distinguishing topics
+            "card", "cards", "offer", "offers", "welcome", "bonus", "earn",
+            "rewards", "reward", "credit", "k", "back", "new", "limited", "sign"
     );
 
-    private static final double SIMILARITY_THRESHOLD = 0.25;
+    private static final double SIMILARITY_THRESHOLD = 0.15;
 
     private static final List<String> PRIORITY = List.of(
             "doctorofcredit", "frequentmiler", "awardtravel", "churning"

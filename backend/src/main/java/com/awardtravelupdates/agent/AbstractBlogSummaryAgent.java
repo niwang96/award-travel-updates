@@ -17,24 +17,30 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             "You are a credit card rewards analyst. Only report on these specific categories: " +
             "(1) New transfer partners added by banks, " +
             "(2) Active transfer bonuses (include the bonus percentage, program names, and expiry if mentioned), " +
-            "(3) New or limited-time card sign-up bonuses (include the full card name, points/miles amount, and spend requirement), " +
+            "(3) New, increased, or returning limited-time card sign-up bonuses (include the full card name, points/miles amount, and spend requirement), " +
             "(4) Changes to existing transfer partner ratios or program terms, " +
             "(5) Lounge news (new openings, closures, or access policy changes), " +
             "(6) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
             "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
-            "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
-            "Skip trip reports, opinion pieces, general news, debit cards, cashback-only products, " +
+            "(8) Limited-time loyalty program promotions — bonus miles/points earned through normal loyalty activity such as specific flights, hotel stays, or shopping portal purchases; excludes cash-purchase promotional packages. " +
+            "(9) Non-travel point/miles redemption opportunities — using credit card or loyalty points/miles for non-flight, non-hotel purposes such as event tickets, merchandise, or experiences at notable value. " +
+            "(10) Promotional packages from travel brands where loyalty points are a significant component of the offer alongside a cash payment — include these even if a cash amount is required (e.g. 'Pay $199, get 3 nights + 100K points' from a hotel brand, timeshare presentations that award points). " +
+            "Skip anything where airline miles or hotel loyalty points are NOT a meaningful part of the deal: " +
+            "trip reports, opinion pieces, general news, debit cards, cashback-only products, " +
             "gift cards (buying, selling, or any promotions involving gift cards), shopping portal cashback offers, " +
-            "bank account bonuses, fuel point promotions, credit card statement credits or merchant offers, " +
-            "and anything that doesn't fit these categories. " +
+            "bank account bonuses, fuel point promotions, " +
+            "card-linked merchant discount programs that provide statement credits or percentage cashback at specific retailers (e.g. AmEx Offers at Lululemon, Chase Offers, Discover cashback promotions) — these have no meaningful airline or hotel points component, " +
+            "general cash-savings deals (e.g. subscription discounts, shopping rewards sites, gift card arbitrage). " +
+            "INCLUDE offers where airline miles or hotel loyalty points are a meaningful part of the value, even if cash is also involved (e.g. redeeming miles for event tickets, hotel packages that award loyalty points). " +
             "Note: shopping portal offers that earn loyalty miles or points (not cashback) qualify under category (8). " +
-            "Always include specific numbers (point amounts, bonus percentages, spend requirements) — omit any item where the key number is not mentioned in the post. " +
+            "Always include the primary number (e.g. bonus points/miles amount or bonus percentage) — omit any item where this is not mentioned in the post. Spend requirements and expiry dates should be included when present but are not required to include the item. " +
             "Return a JSON array of objects with \"text\" (the bullet), \"postIndex\" (1-based index of the post it came from), " +
             "and \"topic\" chosen from exactly these values: credit_cards, flights, hotels, lounges, status, deals. " +
             "Topic assignment: categories 1-4 → credit_cards; category 5 → lounges; " +
             "categories 6-7 for airline/award programs → flights; categories 6-7 for hotel programs → hotels; " +
             "categories 6-7 for bank/credit card programs → credit_cards; " +
-            "category 8 for status matches or challenges → status; category 8 for airline award sales or flight-specific mileage promotions → flights; all other category 8 items → deals. " +
+            "category 8 for status matches or challenges → status; category 8 for airline award sales or flight-specific mileage promotions → flights; all other category 8 items → deals; " +
+            "categories 9-10 → deals. " +
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 2, \"topic\": \"credit_cards\"}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"postIndex\": 5, \"topic\": \"credit_cards\"}]";
 
@@ -71,7 +77,7 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
                 .mapToObj(i -> "[" + (i + 1) + "] " + posts.get(i).title() + "\n" + posts.get(i).content())
                 .collect(Collectors.joining("\n\n"));
         JsonNode json = callApiJson(SYSTEM_PROMPT,
-                "Summarize the key news and updates from these blog posts:\n\n" + numberedPosts);
+                "Summarize the key news and updates from these blog posts. Include an entry for every qualifying post — do not skip qualifying posts just because there are many:\n\n" + numberedPosts);
         return parseUpdates(json, posts,
                 (item, post) -> new SummaryUpdate(item.path("text").asText(), post.url(), post.publishedUtc(), item.path("topic").asText(null)));
     }

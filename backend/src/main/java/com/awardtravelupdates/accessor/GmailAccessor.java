@@ -128,7 +128,7 @@ public class GmailAccessor {
                     .retrieve()
                     .body(JsonNode.class);
 
-            long receivedAt = message.path("internalDate").asLong() / 1000;
+            long receivedAt = message.path("internalDate").asLong();
             JsonNode payload = message.path("payload");
             String subject = extractHeader(payload.path("headers"), "Subject");
             String body = extractTextBody(payload);
