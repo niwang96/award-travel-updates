@@ -95,11 +95,15 @@ public abstract class AbstractSummaryAgent {
         Set<Integer> seenPostIndexes = new HashSet<>();
         for (JsonNode item : json) {
             int postIndex = item.path("postIndex").asInt(0);
-            if (postIndex >= 1 && postIndex <= posts.size() && seenPostIndexes.add(postIndex)) {
+            if (isValidPostIndex(postIndex, posts.size()) && seenPostIndexes.add(postIndex)) {
                 updates.add(toUpdate.apply(item, posts.get(postIndex - 1)));
             }
         }
         return updates;
+    }
+
+    private boolean isValidPostIndex(int postIndex, int postCount) {
+        return postIndex >= 1 && postIndex <= postCount;
     }
 
     private String serializeUpdates(List<SummaryUpdate> updates) {
