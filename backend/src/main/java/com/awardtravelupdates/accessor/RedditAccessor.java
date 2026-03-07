@@ -28,8 +28,9 @@ public class RedditAccessor {
         String uri = useTopPosts ? RedditConstants.TOP_POSTS_URI : RedditConstants.NEW_POSTS_URI;
 
         try {
+            int limit = useTopPosts ? RedditConstants.TOP_POSTS_LIMIT : RedditConstants.DEFAULT_LIMIT;
             JsonNode body = redditClient.get()
-                    .uri(uri, subreddit, RedditConstants.DEFAULT_LIMIT)
+                    .uri(uri, subreddit, limit)
                     .retrieve()
                     .body(JsonNode.class);
 

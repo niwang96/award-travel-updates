@@ -35,7 +35,7 @@ public class GroqAccessor {
     private JsonNode postToGroq(String systemPrompt, String userMessage) {
         Map<String, Object> body = Map.of(
                 "model", MODEL,
-                "max_tokens", 1024,
+                "max_tokens", 2048,
                 "messages", List.of(
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userMessage)
