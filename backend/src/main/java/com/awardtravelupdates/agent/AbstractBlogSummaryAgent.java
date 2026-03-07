@@ -24,9 +24,11 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
             "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
             "Skip trip reports, opinion pieces, general news, debit cards, cashback-only products, " +
-            "gift card deals, shopping portal cashback offers, bank account bonuses, fuel point promotions, " +
-            "credit card statement credits or merchant offers, and anything that doesn't fit these categories. " +
+            "gift cards (buying, selling, or any promotions involving gift cards), shopping portal cashback offers, " +
+            "bank account bonuses, fuel point promotions, credit card statement credits or merchant offers, " +
+            "and anything that doesn't fit these categories. " +
             "Note: shopping portal offers that earn loyalty miles or points (not cashback) qualify under category (8). " +
+            "Always include specific numbers (point amounts, bonus percentages, spend requirements) — omit any item where the key number is not mentioned in the post. " +
             "Return a JSON array of objects with \"text\" (the bullet), \"postIndex\" (1-based index of the post it came from), " +
             "and \"topic\" chosen from exactly these values: credit_cards, flights, hotels, lounges, status, deals. " +
             "Topic assignment: categories 1-4 → credit_cards; category 5 → lounges; " +

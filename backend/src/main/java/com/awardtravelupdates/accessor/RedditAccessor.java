@@ -80,7 +80,9 @@ public class RedditAccessor {
             return toList(children).stream()
                     .map(child -> child.path(RedditConstants.FIELD_DATA))
                     .filter(data -> !data.path(RedditConstants.FIELD_BODY).isMissingNode())
+                    .filter(data -> !RedditConstants.BOT_AUTHORS.contains(data.path(RedditConstants.FIELD_AUTHOR).asText()))
                     .map(data -> new RedditComment(
+                            data.path(RedditConstants.FIELD_AUTHOR).asText(),
                             data.path(RedditConstants.FIELD_BODY).asText(),
                             data.path(RedditConstants.FIELD_UPS).asInt(),
                             data.path(RedditConstants.FIELD_CREATED_UTC).asLong(),

@@ -34,7 +34,9 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
             "(6) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
             "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
             "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
-            "Skip trip reports, general questions, data points, and anything that doesn't fit these categories. " +
+            "Skip trip reports, general questions, data points, referral offers or referral threads, " +
+            "gift cards (buying, selling, or any promotions involving gift cards), and anything that doesn't fit these categories. " +
+            "Always include specific numbers (point amounts, bonus percentages, spend requirements) — omit any item where the key number is not mentioned. " +
             "Return a JSON array of objects with \"text\" (the bullet), \"postIndex\" (1-based index of the post), " +
             "\"commentIndex\" (1-based index of the comment within that post, or 0 if from the post title), " +
             "and \"topic\" chosen from exactly these values: credit_cards, flights, hotels, lounges, status, deals. " +

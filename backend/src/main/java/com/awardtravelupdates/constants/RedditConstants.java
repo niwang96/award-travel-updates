@@ -26,7 +26,10 @@ public final class RedditConstants {
     public static final String FIELD_ID = "id";
     public static final String FIELD_TITLE = "title";
     public static final String FIELD_SELFTEXT = "selftext";
+    public static final String FIELD_AUTHOR = "author";
     public static final String FIELD_BODY = "body";
+
+    public static final Set<String> BOT_AUTHORS = Set.of("rankt-bot", "AutoModerator");
     public static final String FIELD_UPS = "ups";
     public static final String FIELD_CREATED_UTC = "created_utc";
     public static final String FIELD_PERMALINK = "permalink";
