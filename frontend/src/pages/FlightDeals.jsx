@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useFetch } from '../hooks/useFetch'
 import { API } from '../api'
 
@@ -38,6 +38,7 @@ function sortDeals(deals, col, dir) {
 export default function FlightDeals() {
   const { data: deals, loading, error } = useFetch(API.emailDeals)
   const [sort, setSort] = useState({ col: 'points', dir: 'asc' })
+  useEffect(() => { document.title = 'Flight Deals' }, [])
 
   if (loading) return <p className="empty">Loading…</p>
   if (error) return <p className="error">{error}</p>

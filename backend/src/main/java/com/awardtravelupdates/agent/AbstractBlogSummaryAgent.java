@@ -34,7 +34,7 @@ public abstract class AbstractBlogSummaryAgent extends AbstractSummaryAgent {
             "Topic assignment: categories 1-4 → credit_cards; category 5 → lounges; " +
             "categories 6-7 for airline/award programs → flights; categories 6-7 for hotel programs → hotels; " +
             "categories 6-7 for bank/credit card programs → credit_cards; " +
-            "category 8 for status matches or challenges → status; all other category 8 items → deals. " +
+            "category 8 for status matches or challenges → status; category 8 for airline award sales or flight-specific mileage promotions → flights; all other category 8 items → deals. " +
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
             "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 2, \"topic\": \"credit_cards\"}, {\"text\": \"Amex 30% transfer bonus to Virgin Atlantic through Mar 31\", \"postIndex\": 5, \"topic\": \"credit_cards\"}]";
 

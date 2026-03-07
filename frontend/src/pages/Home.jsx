@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Home() {
+  useEffect(() => { document.title = 'Award Travel Updates' }, [])
   return (
     <div className="home">
       <h1 className="home-title">Award Travel Updates</h1>

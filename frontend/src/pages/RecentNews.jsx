@@ -15,6 +15,8 @@ export default function RecentNews() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  useEffect(() => { document.title = 'Recent News' }, [])
+
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller

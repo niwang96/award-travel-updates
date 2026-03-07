@@ -12,8 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -90,9 +92,10 @@ public abstract class AbstractSummaryAgent {
     protected <P> List<SummaryUpdate> parseUpdates(JsonNode json, List<P> posts,
                                                    BiFunction<JsonNode, P, SummaryUpdate> toUpdate) {
         List<SummaryUpdate> updates = new ArrayList<>();
+        Set<Integer> seenPostIndexes = new HashSet<>();
         for (JsonNode item : json) {
             int postIndex = item.path("postIndex").asInt(0);
-            if (postIndex >= 1 && postIndex <= posts.size()) {
+            if (postIndex >= 1 && postIndex <= posts.size() && seenPostIndexes.add(postIndex)) {
                 updates.add(toUpdate.apply(item, posts.get(postIndex - 1)));
             }
         }
