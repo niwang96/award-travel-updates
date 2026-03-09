@@ -16,19 +16,19 @@ Award Travel Updates aggregates award-flight news from Reddit (r/awardtravel, r/
 ```
 award-travel-updates/
 ├── backend/src/main/java/com/awardtravelupdates/
-│   ├── config/         # Spring beans: RestClients, CORS, JPA converters, secrets config
+│   ├── config/         # Spring beans: RestClients, CORS, secrets config
 │   ├── constants/      # Reddit and blog constants (URLs, limits, staleness thresholds)
-│   ├── controller/     # REST endpoints (Blog, Subreddit, EmailDeals, Health)
+│   ├── controller/     # REST endpoints (Blog, Subreddit, EmailDeals, Discord, Health)
 │   ├── agent/          # LLM summarization agents (one per source)
-│   ├── service/        # Orchestration services (caching, summary coordination)
-│   ├── accessor/       # External API clients (Reddit, RSS, Gmail, Groq)
+│   ├── service/        # Orchestration services (caching, summary coordination, Discord)
+│   ├── accessor/       # External API clients (Reddit, RSS, Gmail, Groq, Discord)
+│   ├── converter/      # JPA JSON converters (SummaryUpdate, FlightDeal, String lists)
 │   ├── model/          # Domain records + JPA entities
 │   └── repository/     # Spring Data JPA repositories
 └── frontend/src/
     ├── pages/          # Home, FlightDeals, RecentNews
     ├── components/     # Nav
-    ├── hooks/          # useFetch
-    └── utils/          # deduplication (cross-source Jaccard similarity)
+    └── hooks/          # useFetch
 ```
 
 ## Architecture Overview
@@ -71,12 +71,9 @@ Request → EmailDealsController
 | `BlogAccessor` | RSS feeds via Rome library |
 | `GmailAccessor` | Gmail API with Google OAuth2 refresh-token flow |
 | `GroqAccessor` | Groq LLM API, with 3-retry exponential backoff on rate limits |
+| `DiscordAccessor` | Discord webhook — sends formatted messages to a Discord channel |
 
 All sources are fetched in parallel via a virtual thread pool; LLM calls are sequential to avoid Groq rate limits.
-
-### Frontend deduplication
-
-After merging all 4 sources, `deduplicateData` (in `frontend/src/utils/deduplication.js`) removes near-duplicate updates across sections using Jaccard similarity on word tokens (stop-words stripped). If two updates share ≥40% of their word sets, the lower-priority source's copy is dropped. Priority: `doctorofcredit → frequentmiler → awardtravel → churning`.
 
 ### Agent classes
 
@@ -114,23 +111,28 @@ Set the following in `backend/src/main/resources/application.properties`:
 | `google.client-id` | Google OAuth2 client ID |
 | `google.client-secret` | Google OAuth2 client secret |
 | `google.gmail-refresh-token` | Gmail OAuth2 refresh token (one-time auth) |
+| `discord.webhook.url` | Discord webhook URL (required only for `/api/discord/send`) |
 
 ## API Endpoints
 
 | Method | Path | Description | Response |
 |---|---|---|---|
 | GET | `/api/health` | Health check | `{"status":"ok"}` |
+| GET | `/api/combined-summaries` | All sources merged | `Map<String, SummaryResult>` |
 | GET | `/api/subreddit-summaries` | All subreddit summaries | `Map<String, SummaryResult>` |
 | GET | `/api/subreddit-summaries/{subreddit}` | Single subreddit summary | `SummaryResult` |
 | GET | `/api/blog-summaries` | All blog summaries | `Map<String, SummaryResult>` |
 | GET | `/api/blog-summaries/{blogId}` | Single blog summary | `SummaryResult` |
-| GET | `/api/email-deals` | Roame award flight deals from Gmail | `List<SummaryUpdate>` |
+| GET | `/api/email-deals` | Roame award flight deals from Gmail | `List<FlightDeal>` |
+| POST | `/api/discord/send` | Send today's updates to Discord | `204 No Content` |
 
 **Response shapes:**
 
 ```json
 SummaryResult  { "updates": [...], "stale": false }
-SummaryUpdate  { "text": "...", "source": "https://...", "timestamp": 1234567890 }
+SummaryUpdate  { "text": "...", "source": "https://...", "timestamp": 1234567890, "topic": "flights" }
+FlightDeal     { "points": 50000, "airline": "...", "cabin": "...", "origin": "...", "destination": "...",
+                 "flightDate": "...", "bookingProgram": "...", "source": "https://...", "dateFound": "..." }
 ```
 
 ## External Services
@@ -141,3 +143,4 @@ SummaryUpdate  { "text": "...", "source": "https://...", "timestamp": 1234567890
 | RSS (Rome library) | Doctor of Credit and Frequent Miler blog feeds |
 | Groq API | LLM summarization (llama-3.3-70b-versatile), 3-retry exponential backoff |
 | Gmail API + Google OAuth2 | Parses Roame flight deal alert emails |
+| Discord Webhook | Daily deal and news notifications, grouped by topic |
