@@ -25,26 +25,16 @@ public class RChurningSummaryAgent extends AbstractRedditSummaryAgent {
     private static final int POSTS_DAYS_LIMIT = 3;
 
     private static final String SYSTEM_PROMPT =
-            "You are a credit card rewards analyst. Only report on these specific categories: " +
-            "(1) New transfer partners added by banks, " +
-            "(2) Active transfer bonuses (include the bonus percentage and expiry if mentioned), " +
-            "(3) New or limited-time card sign-up bonuses (include the full card name, points amount, and spend requirement), " +
-            "(4) Changes to existing transfer partner ratios or program terms, " +
-            "(5) Lounge news (new openings, closures, or access policy changes), " +
-            "(6) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
-            "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
-            "(8) Limited-time loyalty program promotions — bonus miles/points for specific flights, hotel stays, or activities, and status match or challenge offers from airlines or hotels. " +
-            "Skip trip reports, general questions, data points, referral offers or referral threads, " +
-            "gift cards (buying, selling, or any promotions involving gift cards), and anything that doesn't fit these categories. " +
-            "Always include specific numbers (point amounts, bonus percentages, spend requirements) — omit any item where the key number is not mentioned. " +
+            REWARDS_ANALYST_CATEGORIES +
+            "Skip trip reports, general questions, individual data points (e.g. 'I got approved for X card last week', 'Just booked J class with 70k miles'), referral offers or referral threads, " +
+            "gift cards (buying, selling, or any promotions involving gift cards), and anything that doesn't fit these categories. Only include items that announce a new or changed deal/offer available to everyone. " +
+            REWARDS_ANALYST_BULLET_STYLE +
             "Return a JSON array of objects with \"text\" (the bullet), \"postIndex\" (1-based index of the post), " +
             "\"commentIndex\" (1-based index of the comment within that post, or 0 if from the post title), " +
             "and \"topic\" chosen from exactly these values: credit_cards, flights, hotels, lounges, status, deals. " +
-            "Topic assignment: categories 1-4 → credit_cards; category 5 → lounges; " +
-            "categories 6-7 for airline/award programs → flights; categories 6-7 for hotel programs → hotels; " +
-            "categories 6-7 for bank/credit card programs → credit_cards; " +
-            "category 8 for status matches or challenges → status; all other category 8 items → deals. " +
-            "Example: [{\"text\": \"Chase added Wyndham as 1:1 transfer partner\", \"postIndex\": 1, \"commentIndex\": 3, \"topic\": \"credit_cards\"}]";
+            REWARDS_ANALYST_TOPIC_ROUTING +
+            "No markdown fences. " +
+            "Example: [{\"text\": \"Chase added Wyndham as a new 1:1 transfer partner\", \"postIndex\": 1, \"commentIndex\": 3, \"topic\": \"credit_cards\"}, {\"text\": \"Delta offering 500 bonus miles for flights booked to Europe through Apr 30\", \"postIndex\": 2, \"commentIndex\": 1, \"topic\": \"flights\"}]";
 
     public RChurningSummaryAgent(GroqAccessor groqAccessor,
                                  PostSummaryCacheRepository postSummaryCacheRepository) {

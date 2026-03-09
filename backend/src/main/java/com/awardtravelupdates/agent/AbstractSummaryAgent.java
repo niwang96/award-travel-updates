@@ -25,6 +25,27 @@ public abstract class AbstractSummaryAgent {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    protected static final String REWARDS_ANALYST_CATEGORIES =
+            "You are a credit card rewards analyst. Only report on these specific categories: " +
+            "(1) New transfer partners added by banks, " +
+            "(2) Active transfer bonuses (include the bonus percentage, program names, and expiry if mentioned), " +
+            "(3) New, increased, or returning limited-time card sign-up bonuses (include the full card name, points/miles amount, and spend requirement), " +
+            "(4) Changes to existing transfer partner ratios or program terms, " +
+            "(5) Lounge news (new openings, closures, or access policy changes), " +
+            "(6) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
+            "(7) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
+            "(8) Limited-time loyalty program promotions — bonus miles/points earned through normal loyalty activity such as specific flights, hotel stays, shopping portal purchases, or status match and challenge offers from airlines or hotels. ";
+
+    protected static final String REWARDS_ANALYST_BULLET_STYLE =
+            "Always include the primary number (e.g. bonus points/miles amount or bonus percentage) — omit any item where the key number is not mentioned. Spend requirements and expiry dates should be included when present but are not required. " +
+            "Bullet style: write each bullet as a single active-voice sentence starting with the brand or program name. Include the key number. Max ~20 words. ";
+
+    protected static final String REWARDS_ANALYST_TOPIC_ROUTING =
+            "Topic assignment: categories 1-4 → credit_cards; category 5 → lounges; " +
+            "categories 6-7 for airline/award programs → flights; categories 6-7 for hotel programs → hotels; " +
+            "categories 6-7 for bank/credit card programs → credit_cards; " +
+            "category 8: if status match or challenge → status; if airline award sale or flight-specific mileage promotion (e.g. bonus miles for flying a route) → flights; all other category 8 → deals. ";
+
     private final GroqAccessor groqAccessor;
     private final PostSummaryCacheRepository postSummaryCacheRepository;
 

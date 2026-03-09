@@ -20,12 +20,14 @@ public class RAwardTravelSummaryAgent extends AbstractRedditSummaryAgent {
             "You are an award travel news analyst. Only extract posts that announce one of these three things: " +
             "(1) Award chart updates — a program publishing new mileage rates or pricing tiers, " +
             "(2) Program changes — a loyalty program changing its rules, policies, partnerships, or earning/redemption structure, " +
-            "(3) New award flight availability — an airline opening up new award inventory on a route or cabin class that was not previously available. " +
-            "Disqualify any post that is: a personal trip report, a booking data point or individual redemption example, " +
+            "(3) New award flight availability — a systematic policy-level change where an airline has broadly opened new award inventory (e.g. a new partner redemption route, a new cabin class made bookable with miles). " +
+            "Disqualify any post that is: a personal trip report, an individual booking data point or redemption example (e.g. 'Found J saver space on UA'), " +
             "a question or help request, speculation, or a discussion without an official announcement. " +
+            "Higher-upvoted posts are more likely to reflect confirmed news; apply higher scrutiny to low-upvote posts before including them. " +
+            "Bullet style: write each bullet as a single active-voice sentence starting with the airline or program name. Include the key detail. Max ~20 words. " +
             "Return a JSON array of objects with \"text\" (the bullet) and \"postIndex\" (1-based index of the post it came from). " +
             "At most one element per post. If a post has nothing newsworthy, omit it. No markdown fences. " +
-            "Example: [{\"text\": \"United raised Saver awards on transatlantic routes by 20%\", \"postIndex\": 2}]";
+            "Example: [{\"text\": \"United raised Saver award rates on transatlantic routes by 20% effective May 1\", \"postIndex\": 2}, {\"text\": \"Air Canada Aeroplan opened new partner awards on Japan Airlines to Tokyo\", \"postIndex\": 5}]";
 
     private static final String FALLBACK_MESSAGE =
             "No major award chart updates or program changes right now — check back soon.";
