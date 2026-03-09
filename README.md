@@ -126,14 +126,60 @@ Set the following in `backend/src/main/resources/application.properties`:
 | GET | `/api/email-deals` | Roame award flight deals from Gmail | `List<FlightDeal>` |
 | POST | `/api/discord/send` | Send today's updates to Discord | `204 No Content` |
 
-**Response shapes:**
+**`GET /api/combined-summaries` and `GET /api/blog-summaries` / `GET /api/subreddit-summaries`**
+
+Map keys for blogs: `doctorofcredit`, `frequentmiler`. Map keys for subreddits: `awardtravel`, `churning`.
 
 ```json
-SummaryResult  { "updates": [...], "stale": false }
-SummaryUpdate  { "text": "...", "source": "https://...", "timestamp": 1234567890, "topic": "flights" }
-FlightDeal     { "points": 50000, "airline": "...", "cabin": "...", "origin": "...", "destination": "...",
-                 "flightDate": "...", "bookingProgram": "...", "source": "https://...", "dateFound": "..." }
+{
+  "doctorofcredit": {
+    "updates": [
+      {
+        "text": "Chase added Wyndham as a new 1:1 transfer partner",
+        "source": "https://www.doctorofcredit.com/chase-adds-wyndham/",
+        "timestamp": 1741000000,
+        "topic": "credit_cards"
+      }
+    ],
+    "stale": false
+  },
+  "frequentmiler": {
+    "updates": [
+      {
+        "text": "Amex offering 30% transfer bonus to Virgin Atlantic through Mar 31",
+        "source": "https://frequentmiler.com/amex-transfer-bonus/",
+        "timestamp": 1741100000,
+        "topic": "credit_cards"
+      }
+    ],
+    "stale": false
+  }
+}
 ```
+
+`stale: true` means the backend returned a cached result older than 3 hours (e.g. because a live fetch failed).
+
+Topic values: `credit_cards`, `flights`, `hotels`, `lounges`, `status`, `deals`.
+
+**`GET /api/email-deals`**
+
+```json
+[
+  {
+    "points": 50000,
+    "airline": "United",
+    "cabin": "Business",
+    "origin": "New York",
+    "destination": "London",
+    "flightDate": "2025-06-15",
+    "bookingProgram": "Air Canada Aeroplan",
+    "source": "https://roame.travel/...",
+    "dateFound": 1741000000
+  }
+]
+```
+
+`dateFound` and `timestamp` are Unix epoch seconds.
 
 ## External Services
 
