@@ -64,18 +64,13 @@ public class GmailAccessor {
     private volatile Instant tokenExpiry = Instant.MIN;
 
     public List<FlightDeal> fetchRecentDeals() {
-        try {
-            String accessToken = getAccessToken();
-            List<String> messageIds = searchMessages(accessToken);
-            List<FlightDeal> results = new ArrayList<>();
-            for (String id : messageIds) {
-                results.addAll(fetchDealsFromMessage(accessToken, id));
-            }
-            return results;
-        } catch (Exception e) {
-            log.error("Failed to fetch email deals: {}", e.getMessage());
-            return List.of();
+        String accessToken = getAccessToken();
+        List<String> messageIds = searchMessages(accessToken);
+        List<FlightDeal> results = new ArrayList<>();
+        for (String id : messageIds) {
+            results.addAll(fetchDealsFromMessage(accessToken, id));
         }
+        return results;
     }
 
     private String getAccessToken() {

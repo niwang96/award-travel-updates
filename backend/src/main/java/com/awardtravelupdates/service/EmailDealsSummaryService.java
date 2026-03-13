@@ -32,15 +32,10 @@ public class EmailDealsSummaryService {
             return cached.get().getDeals();
         }
 
-        try {
-            log.info("Fetching fresh email deals from Gmail");
-            List<FlightDeal> deals = gmailAccessor.fetchRecentDeals();
-            emailDealsSummaryRepository.save(new EmailDealsSummary(EMAIL_DEALS_ID, deals, Instant.now()));
-            return deals;
-        } catch (Exception e) {
-            log.error("Failed to fetch email deals from Gmail", e);
-            return cached.map(EmailDealsSummary::getDeals).orElse(List.of());
-        }
+        log.info("Fetching fresh email deals from Gmail");
+        List<FlightDeal> deals = gmailAccessor.fetchRecentDeals();
+        emailDealsSummaryRepository.save(new EmailDealsSummary(EMAIL_DEALS_ID, deals, Instant.now()));
+        return deals;
     }
 
     private boolean isStale(EmailDealsSummary summary) {

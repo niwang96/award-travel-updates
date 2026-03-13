@@ -47,21 +47,9 @@ public abstract class AbstractCachingSummaryService<POST, CACHED extends Abstrac
             return new SummaryResult(cached.get().getUpdates(), false);
         }
 
-        try {
-            List<SummaryUpdate> updates = summarize(id, posts);
-            saveToCache(id, updates);
-            return new SummaryResult(updates, false);
-        } catch (Exception e) {
-            return buildFallbackResult(cached);
-        }
-    }
-
-    private SummaryResult buildFallbackResult(Optional<CACHED> cached) {
-        if (cached.isPresent()) {
-            return new SummaryResult(cached.get().getUpdates(), true);
-        }
-        return new SummaryResult(
-                List.of(new SummaryUpdate("Summary unavailable — please try again later.", null, null, null)), true);
+        List<SummaryUpdate> updates = summarize(id, posts);
+        saveToCache(id, updates);
+        return new SummaryResult(updates, false);
     }
 
     protected abstract Set<String> getIds();

@@ -92,7 +92,9 @@ public class GroqAccessor {
             try {
                 return call.get();
             } catch (HttpClientErrorException e) {
-                if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && attempt < MAX_RETRIES) {
+                if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
+                    throw new IllegalStateException("Groq API key is invalid or expired: " + e.getStatusCode(), e);
+                } else if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS && attempt < MAX_RETRIES) {
                     log.warn("Groq rate limit hit (attempt {}/{}), retrying after backoff", attempt + 1, MAX_RETRIES);
                     try {
                         Thread.sleep(RETRY_DELAY_MS * (1L << attempt));
