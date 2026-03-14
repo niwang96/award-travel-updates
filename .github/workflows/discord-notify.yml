@@ -2,8 +2,7 @@ name: Daily Discord Notification
 
 on:
   schedule:
-    - cron: '18 1 * * *'  # 8:18pm EST (UTC-5) = 1:18am UTC (Nov–Mar)
-    - cron: '18 0 * * *'  # 8:18pm EDT (UTC-4) = 0:18am UTC (Mar–Nov)
+    - cron: '18 23 * * *'  # 7:18pm EST / 8:18pm EDT = 23:18 UTC
   workflow_dispatch:       # also triggerable manually from GitHub UI
 
 jobs:
