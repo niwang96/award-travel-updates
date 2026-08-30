@@ -73,7 +73,11 @@ public class DiscordNotificationService {
             entry("Jakarta", "JKT"), entry("Manila", "MNL"), entry("Mumbai", "BOM"),
             entry("Delhi", "DEL"), entry("Sydney", "SYD"), entry("Melbourne", "MEL"),
             entry("Auckland", "AKL"),
-            entry("Shannon", "SNN"), entry("Maldives", "MLE"), entry("Ho Chi Minh", "SGN")
+            entry("Shannon", "SNN"), entry("Maldives", "MLE"), entry("Ho Chi Minh", "SGN"),
+            // European destinations from Roame deals
+            entry("Cork", "ORK"), entry("Kittila", "KTT"), entry("Kittilä", "KTT"),
+            entry("Catania", "CTA"), entry("Cataina", "CTA"), // Cataina is a recurring Roame typo for Catania
+            entry("Olbia", "OLB")
     );
 
     private final CombinedSummaryService combinedSummaryService;
