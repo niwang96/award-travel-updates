@@ -74,10 +74,31 @@ public class DiscordNotificationService {
             entry("Delhi", "DEL"), entry("Sydney", "SYD"), entry("Melbourne", "MEL"),
             entry("Auckland", "AKL"),
             entry("Shannon", "SNN"), entry("Maldives", "MLE"), entry("Ho Chi Minh", "SGN"),
-            // European destinations from Roame deals
+            // Additional destinations from Roame deal emails
             entry("Cork", "ORK"), entry("Kittila", "KTT"), entry("Kittilä", "KTT"),
             entry("Catania", "CTA"), entry("Cataina", "CTA"), // Cataina is a recurring Roame typo for Catania
-            entry("Olbia", "OLB")
+            entry("Olbia", "OLB"),
+            // Europe
+            entry("Alicante", "ALC"), entry("Birmingham", "BHX"), entry("Faro", "FAO"),
+            entry("Geneva", "GVA"), entry("Ibiza", "IBZ"), entry("Keflavik", "KEF"),
+            entry("Malaga", "AGP"), entry("Manchester", "MAN"), entry("Milano", "MXP"),
+            entry("Mykonos", "JMK"), entry("Nice", "NCE"), entry("Palma De Mallorca", "PMI"),
+            entry("Sevilla", "SVQ"),
+            // Middle East & Caucasus
+            entry("Tbilisi", "TBS"), entry("Yerevan", "EVN"),
+            // Africa
+            entry("Cape Town", "CPT"),
+            // Asia & Pacific
+            entry("Da Nang", "DAD"), entry("Denpasar", "DPS"), entry("Hanoi", "HAN"),
+            entry("Hiroshima", "HIJ"), entry("Takamatsu", "TAK"), entry("Yamaguchi", "UBE"),
+            entry("French Polynesia", "PPT"),
+            // North America & Caribbean
+            entry("Raleigh", "RDU"), entry("Tampa", "TPA"),
+            entry("Providenciales", "PLS"), entry("St. Thomas", "STT"),
+            // Central America
+            entry("San Jose", "SJO"),
+            // Poland (used as destination name in Roame emails — maps to Warsaw)
+            entry("Poland", "WAW")
     );
 
     private final CombinedSummaryService combinedSummaryService;
