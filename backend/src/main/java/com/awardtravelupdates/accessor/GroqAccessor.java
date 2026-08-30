@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class GroqAccessor {
 
-    private static final String MODEL = "llama-3.3-70b-versatile";
+    private static final String MODEL = "openai/gpt-oss-120b";
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
